@@ -52,7 +52,7 @@ public class FWDOp extends LinearOpMode {
 
 
         telemetry.addData("left joystick y", -gamepad1.left_stick_y);
-        telemetry.addData("right joystick x", gamepad1.right_stick_y);
+        telemetry.addData("right joystick y", gamepad1.right_stick_y);
 
         left_motor.setPower(-gamepad1.left_stick_y * scale);
         right_motor.setPower(gamepad1.right_stick_y * scale);
