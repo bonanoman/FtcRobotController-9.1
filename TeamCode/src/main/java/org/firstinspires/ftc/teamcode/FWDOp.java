@@ -89,8 +89,8 @@ public class FWDOp extends LinearOpMode {
         left_motor.setDirection(DcMotorSimple.Direction.FORWARD);
         right_motor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); // changed zero power behavior to float to avoid skidding sound when turning
+        right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         left_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         right_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
