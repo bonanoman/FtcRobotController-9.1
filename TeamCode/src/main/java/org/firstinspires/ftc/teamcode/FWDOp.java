@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 @TeleOp(name="fourWheelDriveOpMode", group="brion's opmodes!")
 public class FWDOp extends LinearOpMode {
@@ -13,52 +14,64 @@ public class FWDOp extends LinearOpMode {
     // creating hardware variables
     private DcMotor left_motor;
     private DcMotor right_motor;
-
+    
     // button stuff
     private int b_incrementer = 0;
     private final ArrayList<Boolean> b_list = new ArrayList<>();
 
     private final float scale = 0.5f; // scales the powers down.
     private boolean tank_mode = false;
+    
+    private void setPower(float left, float right){
+        
+        left_motor.setPower((left * scale > 0) ? left * scale + trigger_scale() : left * scale - trigger_scale());
+        right_motor.setPower((right * scale > 0) ? right * scale + trigger_scale() : right * scale - trigger_scale());
+        
+        /* regular motor function
+        // 
+        // left_motor.setPower(left * scale);
+        // right_motor.setPower(right * scale);
+        */
+    }
 
     private void driveSimple(){
 
         // define joystick values
-        float left_stick_y = -gamepad1.left_stick_y * scale;
-        float right_stick_x = gamepad1.right_stick_x * scale;
-
-        telemetry.addData("left joystick y", left_stick_y);
-        telemetry.addData("right joystick x", right_stick_x);
+        float left_stick_y = -gamepad1.left_stick_y;
+        float right_stick_x = gamepad1.right_stick_x;
 
         // calculate wheel powers
         float power_left = left_stick_y + right_stick_x;
         float power_right = left_stick_y - right_stick_x;
 
         // normalization
-        if (Math.abs(power_left) > scale || Math.abs(power_right) > scale) {
+        if (Math.abs(power_left) > 1 || Math.abs(power_right) > 1) {
 
             float largest_power = Math.max(Math.abs(power_left), Math.abs(power_right));
-            power_left /= largest_power * scale;
-            power_right /= largest_power * scale;
+            power_left /= largest_power;
+            power_right /= largest_power;
 
         }
 
-        left_motor.setPower(power_left);
-        right_motor.setPower(power_right);
+        setPower(power_left, power_right);
 
     }
 
     private void driveTank(){
 
+        // wheel powers
+        float power_left = -gamepad1.left_stick_y;
+        float power_right = -gamepad1.right_stick_y;
 
-        telemetry.addData("left joystick y", -gamepad1.left_stick_y);
-        telemetry.addData("right joystick y", gamepad1.right_stick_y);
-
-        left_motor.setPower(-gamepad1.left_stick_y * scale);
-        right_motor.setPower(gamepad1.right_stick_y * scale);
+        setPower(power_left, power_right);
 
     }
 
+    private float trigger_scale(){ // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
+        return (scale < 1) ? gamepad1.right_trigger * scale : 0;
+    }
+
+    // automatically updating arraylist of buttons
     boolean ifPressed(boolean button, boolean down){ // down = do you want to detect when the button is pressed down or up
 
         boolean output;
@@ -116,7 +129,6 @@ public class FWDOp extends LinearOpMode {
             }
 
             // choose which driving method
-
             if (tank_mode){
                 driveTank();
             } else {
@@ -124,6 +136,8 @@ public class FWDOp extends LinearOpMode {
             }
 
             // telemetry things
+            telemetry.addData("left joystick", String.format(Locale.getDefault(), "(%1$f, %2$f)", gamepad1.left_stick_x, -gamepad1.left_stick_y));
+            telemetry.addData("right joystick", String.format(Locale.getDefault(), "(%1$f, %2$f)", gamepad1.right_stick_x, -gamepad1.right_stick_y));
             telemetry.addData("left wheels power", left_motor.getPowerFloat());
             telemetry.addData("right wheels power", right_motor.getPowerFloat());
 
