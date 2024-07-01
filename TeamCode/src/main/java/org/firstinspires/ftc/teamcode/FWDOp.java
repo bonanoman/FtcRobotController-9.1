@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 @TeleOp(name="fourWheelDriveOpMode", group="brion's opmodes!")
@@ -16,22 +15,33 @@ public class FWDOp extends LinearOpMode {
     private DcMotor right_motor;
     
     // button stuff
-    private int b_incrementer = 0;
-    private final ArrayList<Boolean> b_list = new ArrayList<>();
+    private final Buttons buttons = new Buttons();
 
-    private final float scale = 0.5f; // scales the powers down.
+    private final float SCALE = 0.5f; // scales the powers down.
     private boolean tank_mode = false;
     
     private void setPower(float left, float right){
         
-        left_motor.setPower((left * scale > 0) ? left * scale + trigger_scale() : left * scale - trigger_scale());
-        right_motor.setPower((right * scale > 0) ? right * scale + trigger_scale() : right * scale - trigger_scale());
+        left_motor.setPower(left * SCALE + triggerScale(left));
+        right_motor.setPower(right * SCALE + triggerScale(right));
         
         /* regular motor function
         // 
         // left_motor.setPower(left * scale);
         // right_motor.setPower(right * scale);
         */
+    }
+
+    private float triggerScale(float power){ // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
+        float output = gamepad1.right_trigger * SCALE;
+
+        if (power < 0){ // if it's negative you want it to approach -1
+            output *= -1;
+        } else if (power == 0) { // if it's 0 you don't want to add anything to it
+            output = 0;
+        }
+
+        return output;
     }
 
     private void driveSimple(){
@@ -67,30 +77,6 @@ public class FWDOp extends LinearOpMode {
 
     }
 
-    private float trigger_scale(){ // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
-        return (scale < 1) ? gamepad1.right_trigger * scale : 0;
-    }
-
-    // automatically updating arraylist of buttons
-    boolean ifPressed(boolean button, boolean down){ // down = do you want to detect when the button is pressed down or up
-
-        boolean output;
-
-        if (b_list.size() == b_incrementer){ // if there isn't a value for button then make one.
-            b_list.add(false);
-        }
-
-        boolean b_was = b_list.get(b_incrementer); // last value of the button
-
-        output = (button != b_was && button == down); // if the button isn't in the same state it was and (if down is true) the button is now down then the button was pressed.
-
-        b_list.set(b_incrementer, button);
-
-        b_incrementer++;
-        return output;
-
-    }
-
     @Override
     public void runOpMode(){
 
@@ -120,8 +106,8 @@ public class FWDOp extends LinearOpMode {
             telemetry.addData("state", "active");
             telemetry.addData("runtime", getRuntime());
 
-            // buttons
-            boolean options_pressed = ifPressed(gamepad1.options, true);
+            // Buttons
+            boolean options_pressed = buttons.ifPressed(gamepad1.options, true);
 
             // update tank_mode variable
             if (options_pressed){
@@ -138,12 +124,13 @@ public class FWDOp extends LinearOpMode {
             // telemetry things
             telemetry.addData("left joystick", String.format(Locale.getDefault(), "(%1$f, %2$f)", gamepad1.left_stick_x, -gamepad1.left_stick_y));
             telemetry.addData("right joystick", String.format(Locale.getDefault(), "(%1$f, %2$f)", gamepad1.right_stick_x, -gamepad1.right_stick_y));
+            telemetry.addData("right trigger", gamepad1.right_trigger);
             telemetry.addData("left wheels power", left_motor.getPowerFloat());
             telemetry.addData("right wheels power", right_motor.getPowerFloat());
 
             telemetry.update();
 
-            b_incrementer = 0;
+            buttons.reset();
 
         }
 
