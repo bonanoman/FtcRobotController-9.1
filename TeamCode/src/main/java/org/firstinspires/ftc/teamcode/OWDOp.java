@@ -75,7 +75,7 @@ public class OWDOp extends LinearOpMode {
             // joystick variables
             float stick_x = gamepad1.left_stick_x;
             float stick_y = -gamepad1.left_stick_y;
-            float turn = gamepad1.right_stick_x;
+            float turn = gamepad1.right_stick_x; // * SCALE/2; // scaled down turning
 
             // power calculations -- PI = 180 DEGREES
             double theta = Math.atan2(stick_y, stick_x) - (Math.PI / 4); // subtract 45 degrees so that the theta inside and outside the triangle are the same
