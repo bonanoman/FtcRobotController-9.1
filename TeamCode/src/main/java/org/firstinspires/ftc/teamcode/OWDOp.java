@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import java.util.Locale;
 
+@TeleOp(name="omni wheel drive opmode", group="brion's opmodes!")
 public class OWDOp extends LinearOpMode {
 
     private DcMotor front_left;
