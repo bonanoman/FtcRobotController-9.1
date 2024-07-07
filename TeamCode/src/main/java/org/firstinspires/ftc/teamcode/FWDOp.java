@@ -177,6 +177,17 @@ public class FWDOp extends LinearOpMode {
                 driveSimple();
             }
 
+            // dpad drive
+            if (gamepad1.dpad_up){
+                setPower(1, 1);
+            } else if (gamepad1.dpad_down){
+                setPower(-1, -1);
+            } else if (gamepad1.dpad_left){
+                setPower(-1, 1);
+            } else if (gamepad1.dpad_right){
+                setPower(1, -1);
+            }
+
             // telemetry things
             telemetry.addData("state", "active");
             telemetry.addData("runtime", getRuntime());
