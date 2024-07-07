@@ -13,7 +13,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.ArrayList;
 import java.util.Locale;
 
-@TeleOp(name="prototype one", group="prototypes")
+@TeleOp(name="prototype one", group="brion's opmodes!")
 public class prototype_one extends OpMode {
 
     // hardware
