@@ -4,13 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import java.util.ArrayList;
 import java.util.Locale;
 
 @TeleOp(name="prototype one", group="brion's opmodes!")
@@ -19,129 +17,79 @@ public class prototype_one extends OpMode {
     // hardware
     private DcMotor left_motor;
     private DcMotor right_motor;
+    private DistanceSensor distance_sensor;
 
-    // april tag
-    private AprilTagProcessor tag_processor;
-    private AprilTagDetection desired_tag = null;
-
-    // buttons
+    // buttons & arm set up class
     private Buttons buttons;
-    private int tag_absent_frames = 0;
+    private Arm arm;
 
     // toggles
-    private boolean tank_mode;
-    private boolean BALL_CAPTURED = false; // is the ball in the holder.
-    private int TAG_ID = -1; // choose the tag you want to approach or set to -1 for any tag
+    private boolean holding = false;
 
     // constants
     private final float SCALE = 0.5f;
-    private final float DISTANCE_FROM_TAG = 12; // inches
-    private final int HIGH_DECIMATION = 3;
-    private final int LOW_DECIMATION = 2;
-    private final int HIGH_DECIMATION_RANGE = 12;
-    private final int FRAMES_BEFORE_LOW_DECIMATION = 4;
+    private final float MINIMUM_DISTANCE = 6;
+    private final float PADDED_DISTANCE = 6;
 
-    /*
-    to turn on the camera stream - click the three dots then camera stream.
-     */
+    public void sleep(long ms) {
 
-    @Override
-    public void start(){
-        resetRuntime();
-        telemetry.addData("status", "initialized");
-        telemetry.update();
-    }
-    //
-    // name age hobbies future plans why you joined fgc
-    //
-
-    private void setPower(float left, float right){
-        left_motor.setPower(left * SCALE + triggerScale(left));
-        right_motor.setPower(right * SCALE + triggerScale(right));
-    }
-
-    private double triggerScale(double power){ // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
-        double output = gamepad1.right_trigger * SCALE;
-
-        if (power < 0){ // if it's negative you want it to approach -1
-            output *= -1;
-        } else if (power == 0) { // if it's 0 you don't want to add anything to it
-            output = 0;
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
-        return output;
     }
 
-    private void driveSimple(){
+    private void setPower(float left, float right) {
 
-        // calculation
-        float power_left = -gamepad1.left_stick_y - gamepad1.left_stick_x; // power - turn
-        float power_right = gamepad1.left_stick_y + gamepad1.left_stick_x; // power + turn
+        double trigger = gamepad1.right_trigger * SCALE;
+        double left_power;
+        double right_power;
 
-        // normalization
-        if (Math.abs(power_left) > 1 || Math.abs(power_right) > 1){
-
-            float max = Math.max(Math.abs(power_left), Math.abs(power_right));
-            power_left /= max;
-            power_right /= max;
-
-        }
-
-        setPower(power_left, power_right);
-
-    }
-
-    private void driveTank(){setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
-
-    private void driveAuto(){ // drive with apriltags
-
-        ArrayList<AprilTagDetection> detections = tag_processor.getDetections();
-
-        if (detections.isEmpty()){
-            tag_absent_frames++;
-            if (tag_absent_frames >= FRAMES_BEFORE_LOW_DECIMATION){
-                tag_processor.setDecimation(LOW_DECIMATION);
-            }
+        if (left < 0) {
+            left_power = left * SCALE - trigger + range_deceleration();
+        } else if (left > 0) {
+            left_power = left * SCALE + trigger - range_deceleration();
         } else {
-            tag_absent_frames = 0;
+            left_power = 0;
+        }
 
-            if (detections.get(0).ftcPose.z <= HIGH_DECIMATION_RANGE){
-                tag_processor.setDecimation(HIGH_DECIMATION);
-            }
+        if (right < 0) {
+            right_power = right * SCALE - trigger + range_deceleration();
+        } else if (right > 0) {
+            right_power = right * SCALE + trigger - range_deceleration();
+        } else {
+            right_power = 0;
+        }
 
-            for (AprilTagDetection d : detections) {
+        left_motor.setPower(left_power);
+        right_motor.setPower(right_power);
 
-                if (d.metadata != null) { // if we have  info on this tag
+    }
 
-                    if ((TAG_ID < 0) || (d.id == TAG_ID)) { // if we want to go to this tag
-                        desired_tag = d;
-                        break;
-                    }
+    private void driveTank() {setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
 
-                }
+    private double range_deceleration() {
 
-            }
+        double distance = distance_sensor.getDistance(DistanceUnit.INCH);
+        double max = MINIMUM_DISTANCE + PADDED_DISTANCE;
 
-            if (desired_tag != null){
+        if (distance > max) {
 
-                // begin moving towards it
-                float power = (float) desired_tag.ftcPose.range - DISTANCE_FROM_TAG; // distance between tag and camera (also considered the power)
-                float turn = (float) desired_tag.ftcPose.x;
+            return 0;
 
-                float power_left = power - turn;
-                float power_right = power + turn;
+        } else if (distance < MINIMUM_DISTANCE) {
 
-                float max = Math.max(Math.abs(power_left), Math.abs(power_right));
-                power_left /= max;
-                power_right /= max;
-
-                setPower(power_left, power_right);
-
-            }
+            return 1;
 
         }
 
+        return (max - distance) / PADDED_DISTANCE;
+
     }
+
+    public void line() {telemetry.addLine("\n---------------------------------------------------------------------\n");}
 
     @Override
     public void init() {
@@ -162,79 +110,85 @@ public class prototype_one extends OpMode {
         left_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         right_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        WebcamName webcam = hardwareMap.get(WebcamName.class, "webcam1");
+        // set up distance sensor
+        distance_sensor = hardwareMap.get(DistanceSensor.class, "ds");
 
         // set up buttons
         buttons = new Buttons();
 
-        // april tag
-        tag_processor = new AprilTagProcessor.Builder()
-                .setDrawAxes(true)
-                .setDrawTagOutline(true)
-                .build();
+        // set up arms
+        arm = new Arm(this);
+        arm.init();
+        arm.spinning = true;
 
-        VisionPortal vision_portal = new VisionPortal.Builder()
-                .setCamera(webcam)
-                .addProcessor(tag_processor)
-                .build();
+    }
 
+    @Override
+    public void start() {
+        resetRuntime();
+        telemetry.addData("status", "active");
+        telemetry.update();
     }
 
     @Override
     public void loop() {
 
-        // buttons
-        boolean options = buttons.ifPressed(gamepad1.options, true);
-
-        if (options) {
-            tank_mode = !tank_mode;
-        }
+        boolean x_pressed = buttons.ifPressed(gamepad1.x);
+        boolean y_pressed = buttons.ifPressed(gamepad1.y);
 
         // drive mode
-        if (tank_mode){
-            driveTank();
+        driveTank();
+
+        // arm
+        if (gamepad1.y) {
+            arm.unfreezeHD();
+            arm.moveHDMotorsUp();
+        } else if (gamepad1.a) {
+            arm.unfreezeHD();
+            arm.moveHDMotorsDown();
         } else {
-            driveSimple();
+            arm.freezeHD();
         }
 
-        // auto drive
-        if (gamepad1.a) {
-            driveAuto();
+        if (gamepad1.dpad_up) {
+            arm.unfreezeCORE();
+            arm.moveCOREMotorsUp();
+        } else if (gamepad1.dpad_down) {
+            arm.unfreezeCORE();
+            arm.moveCOREMotorsDown();
+        } else {
+            arm.freezeCORE();
         }
+
+        if (x_pressed) holding = !holding;
+        if (y_pressed) arm.spinning = !arm.spinning;
+        arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
 
         // telemetry
-        telemetry.addData("status", "running");
-        telemetry.addData("left joystick", String.format(Locale.getDefault(), "(%f, %f)", gamepad1.left_stick_x, -gamepad1.left_stick_y));
-        telemetry.addData("right joystick", String.format(Locale.getDefault(), "(%f, %f)", gamepad1.right_stick_x, -gamepad1.right_stick_y));
+        line(); // just makes a line of the "-" character.
+        telemetry.addData("status", "active");
+        line();
+        telemetry.addData("left joystick", String.format(Locale.getDefault(), "(%.2f, %.2f)", gamepad1.left_stick_x, -gamepad1.left_stick_y));
+        telemetry.addData("right joystick", String.format(Locale.getDefault(), "(%.2f, %.2f)", gamepad1.right_stick_x, -gamepad1.right_stick_y));
         telemetry.addData("right trigger", gamepad1.right_trigger);
-        telemetry.addData("left wheels power", left_motor.getPower());
-        telemetry.addData("right wheels power", right_motor.getPower());
-
-        if (desired_tag != null){
-
-            telemetry.addData("\napril tag", "ID %d (%s)", desired_tag.id, desired_tag.metadata.name);
-            telemetry.addData("range",  "%.1f inches", desired_tag.ftcPose.range);
-            telemetry.addData("bearing","%.0f degrees", desired_tag.ftcPose.bearing);
-
-        }
+        line();
+        telemetry.addData("left wheels power", "%.2f", left_motor.getPower());
+        telemetry.addData("right wheels power", "%.2f", right_motor.getPower());
+        line();
+        arm.telemetry();
 
         telemetry.update();
 
+        buttons.reset();
+
     }
+
+    @Override
+    public void stop() {
+
+        setPower(0, 0);
+        arm.relax();
+
+    }
+
 }
-
-// DEFAULTS FOR APRIL TAG PROCESSOR
-// The following default settings are available to un-comment and edit as needed.
-                //.setDrawAxes(false)
-                //.setDrawCubeProjection(false)
-                //.setDrawTagOutline(true)
-                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
-                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-
-                // == CAMERA CALIBRATION ==
-                // If you do not manually specify calibration parameters, the SDK will attempt
-                // to load a predefined calibration for your camera.
-                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
-                // ... these parameters are fx, fy, cx, cy.
-

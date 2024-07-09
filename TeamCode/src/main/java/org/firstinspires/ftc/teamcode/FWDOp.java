@@ -5,7 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import java.util.Locale;
+// distance sensors (slow down the closer it gets, when it gets to a set distance speed must be 0) -- future project
+
 
 @TeleOp(name="four wheel drive opmode", group="brion's opmodes!")
 public class FWDOp extends LinearOpMode {
@@ -13,10 +14,12 @@ public class FWDOp extends LinearOpMode {
     // creating hardware variables
     private DcMotor left_motor;
     private DcMotor right_motor;
-    
+
     // button stuff
     private final Buttons buttons = new Buttons();
     private boolean tank_mode = true;
+    private int brake_left;
+    private int brake_right;
 
     // constants
     private final float SCALE = 0.5f; // scales the powers down.
@@ -32,24 +35,23 @@ public class FWDOp extends LinearOpMode {
     private final double WHEEL_DIAMETER = 90 / 25.4; // 90mm to inches = 90 mm / 25.4
     private final double COUNTS_PER_INCH = (560 * 0.65) / (WHEEL_DIAMETER * Math.PI);
 
-    private void setPower(float left, float right){
+    private void setPower(float left, float right) {
         left_motor.setPower(left * SCALE + triggerScale(left));
         right_motor.setPower(right * SCALE + triggerScale(right));
         // left_motor.setPower(left * scale); // regular wheel function
         // right_motor.setPower(right * scale);
     }
 
-    private void setPosition(double left, double right){
+    private void setPosition(double left, double right) {
         left_motor.setTargetPosition((int) left);
         right_motor.setTargetPosition((int) right);
     }
 
-    private void setMode(DcMotor.RunMode rm){left_motor.setMode(rm); right_motor.setMode(rm);}
+    private void setMode(DcMotor.RunMode rm) {left_motor.setMode(rm); right_motor.setMode(rm);}
 
-    private float triggerScale(float power){ // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
+    private float triggerScale(float power) { // CONCEPT: if the speed is scaled down and you want to go faster press down right trigger to increase speed.
         float output = gamepad1.right_trigger * SCALE;
-
-        if (power < 0){ // if it's negative you want it to approach -1
+        if (power < 0) { // if it's negative you want it to approach -1
             output *= -1;
         } else if (power == 0) { // if it's 0 you don't want to add anything to it
             output = 0;
@@ -58,7 +60,7 @@ public class FWDOp extends LinearOpMode {
         return output;
     }
 
-    private void driveSimple(){
+    private void driveSimple() {
 
         // define joystick values
         float left_stick_y = -gamepad1.left_stick_y;
@@ -81,9 +83,9 @@ public class FWDOp extends LinearOpMode {
 
     }
 
-    private void driveTank(){setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
+    private void driveTank() {setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
 
-    private void resetEncoder(){
+    private void resetEncoder() {
 
         left_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         right_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -93,9 +95,9 @@ public class FWDOp extends LinearOpMode {
 
     }
 
-    private void driveEncoder(double speed, double left_inches, double right_inches){
+    private void driveEncoder(double speed, double left_inches, double right_inches) {
 
-        if (opModeIsActive()){
+        if (opModeIsActive()) {
 
             resetEncoder();
 
@@ -108,21 +110,22 @@ public class FWDOp extends LinearOpMode {
             // ^ abs val because you set a negative distance to make it go backward.
             // ^^ divided by SCALE to bypass the scaling in the setPower() function
 
-            while(opModeIsActive() && left_motor.isBusy() && right_motor.isBusy() && !gamepad1.right_bumper){ // RIGHT BUMPER IS THE FAILSAFE.
+            while(opModeIsActive() && left_motor.isBusy() && right_motor.isBusy() && !gamepad1.right_bumper) { // RIGHT BUMPER IS THE FAILSAFE.
 
                 telemetry.addData("state", "auto");
                 telemetry.addData("runtime", getRuntime());
                 telemetry.addData("right trigger", gamepad1.right_trigger);
-                telemetry.addData("left wheels power", "%.2d", left_motor.getPower());
-                telemetry.addData("right wheels power", "%.2d", right_motor.getPower());
-                telemetry.addData("moving to", "(%.2d, %.2d)", left_position, right_position);
-                telemetry.addData("now at", "%.2d, %.2d", left_motor.getCurrentPosition(), right_motor.getCurrentPosition());
+                telemetry.addData("left wheels power", left_motor.getPower());
+                telemetry.addData("right wheels power", right_motor.getPower());
+                telemetry.addData("moving to", "("+left_position+", "+right_position+")");
+                telemetry.addData("now at", "("+left_motor.getCurrentPosition()+", "+right_motor.getCurrentPosition()+")");
 
                 telemetry.update();
 
             }
 
-            setPower(0f, 0f);
+            setPower(0, 0);
+
             setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             sleep(250);
 
@@ -131,7 +134,7 @@ public class FWDOp extends LinearOpMode {
     }
 
     @Override
-    public void runOpMode(){
+    public void runOpMode() {
 
         // defining hardware variables (add device names tomorrow)
         left_motor = hardwareMap.get(DcMotor.class, "motor1");
@@ -144,8 +147,7 @@ public class FWDOp extends LinearOpMode {
         left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // set telemetry and runtime
         telemetry.setMsTransmissionInterval(50);
@@ -153,49 +155,72 @@ public class FWDOp extends LinearOpMode {
 
         waitForStart();
 
-        while (opModeIsActive()){
+        while (opModeIsActive()) {
 
             // Buttons
-            boolean options_pressed = buttons.ifPressed(gamepad1.options, true);
-            boolean a_pressed = buttons.ifPressed(gamepad1.a, true);
+            boolean options_pressed = buttons.ifPressed(gamepad1.options);
+            boolean a_pressed = buttons.ifPressed(gamepad1.a);
 
-            if (a_pressed){
-
-                driveEncoder(0.5, 12, 12); // should move a foot forward
-
-            }
+            if (a_pressed) driveEncoder(0.5, 12, 12); // should move a foot forward
 
             // update tank_mode variable
-            if (options_pressed){
-                tank_mode = !tank_mode;
+            if (options_pressed) tank_mode = !tank_mode;
+
+            while (gamepad1.right_bumper) {
+
+                int left = left_motor.getCurrentPosition();
+                int right = right_motor.getCurrentPosition();
+
+                telemetry.addData("ticks", "(%.2f, %.2f)", left_motor.getCurrentPosition(), right_motor.getCurrentPosition());
+                telemetry.addData("stuck pos", "(%.2f, %.2f)", left, right);
+
+                left_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                right_motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                left_motor.setTargetPosition(left);
+                right_motor.setTargetPosition(right);
+
+                left_motor.setPower(1);
+                right_motor.setPower(1);
+
+                telemetry.addData("state", "braking");
+                telemetry.addData("runtime", getRuntime());
+                telemetry.addData("left wheels power", left_motor.getPower());
+                telemetry.addData("right wheels power", right_motor.getPower());
+                telemetry.update();
+
             }
 
-            // choose which driving method
-            if (tank_mode){
-                driveTank();
-            } else {
-                driveSimple();
-            }
+            resetEncoder();
 
-            // dpad drive
-            if (gamepad1.dpad_up){
+            // dpad drive or regular
+            if (gamepad1.dpad_up) {
                 setPower(1, 1);
-            } else if (gamepad1.dpad_down){
+            } else if (gamepad1.dpad_down) {
                 setPower(-1, -1);
-            } else if (gamepad1.dpad_left){
+            } else if (gamepad1.dpad_left) {
                 setPower(-1, 1);
-            } else if (gamepad1.dpad_right){
+            } else if (gamepad1.dpad_right) {
                 setPower(1, -1);
+            } else {
+
+                // choose which driving method
+                if (tank_mode) {
+                    driveTank();
+                } else {
+                    driveSimple();
+                }
+
             }
 
             // telemetry things
             telemetry.addData("state", "active");
             telemetry.addData("runtime", getRuntime());
-            telemetry.addData("left joystick", String.format(Locale.getDefault(),"(%.2f, %.2f)", gamepad1.left_stick_x, -gamepad1.left_stick_y));
-            telemetry.addData("right joystick", String.format(Locale.getDefault(), "(%.2f, %.2f)", gamepad1.right_stick_x, -gamepad1.right_stick_y));
+            telemetry.addData("left joystick", "("+gamepad1.left_stick_x+", "+(-gamepad1.left_stick_y)+")");
+            telemetry.addData("right joystick", "("+gamepad1.right_stick_x+", "+(-gamepad1.right_stick_y)+")");
             telemetry.addData("right trigger", gamepad1.right_trigger);
-            telemetry.addData("left wheels power", "%.2d", left_motor.getPower());
-            telemetry.addData("right wheels power", "%.2d", right_motor.getPower());
+            telemetry.addData("left wheels power", left_motor.getPower());
+            telemetry.addData("right wheels power", right_motor.getPower());
 
             telemetry.update();
 
