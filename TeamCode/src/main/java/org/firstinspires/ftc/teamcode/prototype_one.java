@@ -136,6 +136,10 @@ public class prototype_one extends OpMode {
         boolean x_pressed = buttons.ifPressed(gamepad1.x);
         boolean y_pressed = buttons.ifPressed(gamepad1.y);
 
+        if (buttons.time_held(gamepad1.left_stick_button, getRuntime(), 5) && buttons.time_held(gamepad1.right_stick_button, getRuntime(), 5)) {
+            arm.calibrate(); // if you press down on the two joysticks then the calibration will start
+        }
+
         // drive mode
         driveTank();
 

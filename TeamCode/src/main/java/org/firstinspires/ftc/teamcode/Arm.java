@@ -106,22 +106,14 @@ public class Arm {
         calibrated_positions.put("SECOND_ELBOW_MIN", null);
         calibrated_positions.put("SECOND_ELBOW_MAX", null);
 
-        if (calibrated_positions.get("FIRST_ELBOW_MIN") == null) {
-
-            try {
-                calibrate();
-            } catch (InterruptedException e) {
-                opmode.telemetry.addLine("> CALIBRATION FAILED");
-            }
-
-        }
+        if (calibrated_positions.get("FIRST_ELBOW_MIN") == null) calibrate();
 
         MOVE_HD_BY = Math.abs(calibrated_positions.get("FIRST_ELBOW_MAX") - calibrated_positions.get("FIRST_ELBOW_MIN") / SMOOTHNESS_OF_TURNING);
         MOVE_CORE_BY = Math.abs(calibrated_positions.get("SECOND_ELBOW_MAX") - calibrated_positions.get("SECOND_ELBOW_MIN") / SMOOTHNESS_OF_TURNING);
 
     }
 
-    public void calibrate() throws InterruptedException {
+    public void calibrate() {
 
         while(!opmode.gamepad1.a) {
             opmode.telemetry.addLine("> FIRST ELBOW MIN POSITION (PRESS A WHEN SET)");
@@ -129,7 +121,7 @@ public class Arm {
         }
 
         calibrated_positions.replace("FIRST_ELBOW_MIN", hd_left_motor.getCurrentPosition());
-        opmode.sleep(100);
+        opmode.sleep(1000);
 
         while (!opmode.gamepad1.a) {
             opmode.telemetry.addLine("> FIRST ELBOW MAX POSITION (PRESS A WHEN SET)");
@@ -137,7 +129,7 @@ public class Arm {
         }
 
         calibrated_positions.replace("FIRST_ELBOW_MAX", hd_left_motor.getCurrentPosition());
-        opmode.sleep(100);
+        opmode.sleep(1000);
 
         while(!opmode.gamepad1.a) {
             opmode.telemetry.addLine("> SECOND ELBOW MIN POSITION (PRESS A WHEN SET)");
@@ -145,7 +137,7 @@ public class Arm {
         }
 
         calibrated_positions.replace("SECOND_ELBOW_MIN", core_left_motor.getCurrentPosition());
-        opmode.sleep(100);
+        opmode.sleep(1000);
 
         while (!opmode.gamepad1.a) {
             opmode.telemetry.addLine("> SECOND ELBOW MAX POSITION (PRESS A WHEN SET)");
@@ -153,7 +145,7 @@ public class Arm {
         }
 
         calibrated_positions.replace("SECOND_ELBOW_MAX", core_left_motor.getCurrentPosition());
-        opmode.sleep(100);
+        opmode.sleep(1000);
 
     }
 
