@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class Arm {
 
@@ -18,7 +20,7 @@ public class Arm {
     // ONLY RESET ENCODERS ONCE.
 
     // hardware
-    private prototype_one opmode;
+    private OpMode opmode;
     private DcMotor hd_left_motor;
     private DcMotor hd_right_motor;
     private DcMotor core_left_motor;
@@ -26,50 +28,47 @@ public class Arm {
     private Servo left_servo;
     private Servo right_servo;
 
-    public final HashMap<String, Integer> calibrated_positions = new HashMap<>();
+    private HashMap<String, Integer> calibrated_positions = new HashMap<>();
     /*
-
     POSITIONS (IN TICKS)
     --------------------
     FIRST_ELBOW_MIN - HD motors of arm down
     FIRST_ELBOW_MAX - HD motors of arm up
     SECOND_ELBOW_MIN - CORE motors of arm down
     SECOND_ELBOW_MAX - CORE motors of arm up
-    
      */
-
-    // freezing motors
-    private boolean frozen_hd = true;
-    private int frozen_hd_pos = 0;
-    private boolean frozen_core = true;
-    private int frozen_core_pos = 0;
 
     // toggles
     public boolean spinning = false;
+    public boolean calibrating = false;
 
     // constants
     private final float SERVO_POWER = 1000;
     private final float HD_MOTOR_POWER = 0.1f;
-    private final float CORE_MOTOR_POWER = 0.1f;
-    private final int SMOOTHNESS_OF_TURNING = 100; // moves (max - min) / SMOOTHNESS_OF_TURNING ticks for every frame that you are pressing the up button for.
-    private int MOVE_HD_BY;
-    private int MOVE_CORE_BY;
+    private final float CORE_MOTOR_POWER = 0.2f;
+    private final int SMOOTHNESS_OF_TURNING = 10; // moves (max - min) / SMOOTHNESS_OF_TURNING ticks for every frame that you are pressing the up button for.
 
-    public Arm(prototype_one opmode) {
+    private int MOVE_HD_BY = 50;
+    private int MOVE_CORE_BY = 10;
+
+    private int virtual_hd_position = 0;
+    private int virtual_core_position = 0;
+
+    public Arm(OpMode opmode) {
         this.opmode = opmode;
     }
 
-    private void resetEncoder() {
+    public void resetEncoder() {
 
         hd_left_motor.setMode(RunMode.STOP_AND_RESET_ENCODER);
         hd_right_motor.setMode(RunMode.STOP_AND_RESET_ENCODER);
         core_left_motor.setMode(RunMode.STOP_AND_RESET_ENCODER);
         core_right_motor.setMode(RunMode.STOP_AND_RESET_ENCODER);
 
-        hd_left_motor.setMode(RunMode.RUN_USING_ENCODER);
-        hd_right_motor.setMode(RunMode.RUN_USING_ENCODER);
-        core_left_motor.setMode(RunMode.RUN_USING_ENCODER);
-        core_right_motor.setMode(RunMode.RUN_USING_ENCODER);
+        hd_left_motor.setMode(RunMode.RUN_TO_POSITION);
+        hd_right_motor.setMode(RunMode.RUN_TO_POSITION);
+        core_left_motor.setMode(RunMode.RUN_TO_POSITION);
+        core_right_motor.setMode(RunMode.RUN_TO_POSITION);
 
     }
 
@@ -79,236 +78,33 @@ public class Arm {
         hd_right_motor = opmode.hardwareMap.get(DcMotor.class, "hd2");
         core_left_motor = opmode.hardwareMap.get(DcMotor.class, "core1");
         core_right_motor = opmode.hardwareMap.get(DcMotor.class, "core2");
-        left_servo = opmode.hardwareMap.get(Servo.class, "servo1");
-        right_servo = opmode.hardwareMap.get(Servo.class, "servo2");
+        //left_servo = opmode.hardwareMap.get(Servo.class, "servo1");
+        //right_servo = opmode.hardwareMap.get(Servo.class, "servo2");
 
-        hd_left_motor.setMode(RunMode.RUN_USING_ENCODER);
-        hd_right_motor.setMode(RunMode.RUN_USING_ENCODER);
-        core_left_motor.setMode(RunMode.RUN_USING_ENCODER);
-        core_right_motor.setMode(RunMode.RUN_USING_ENCODER);
-        
+        hd_left_motor.setMode(RunMode.RUN_TO_POSITION);
+        hd_right_motor.setMode(RunMode.RUN_TO_POSITION);
+        core_left_motor.setMode(RunMode.RUN_TO_POSITION);
+        core_right_motor.setMode(RunMode.RUN_TO_POSITION);
+
         hd_left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         hd_right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         core_left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         core_right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        
+
         hd_left_motor.setDirection(DcMotor.Direction.FORWARD);
         hd_right_motor.setDirection(DcMotor.Direction.REVERSE);
         core_left_motor.setDirection(DcMotor.Direction.FORWARD);
         core_right_motor.setDirection(DcMotor.Direction.REVERSE);
-        left_servo.setDirection(Servo.Direction.FORWARD);
-        right_servo.setDirection(Servo.Direction.REVERSE);
+        //left_servo.setDirection(Servo.Direction.FORWARD);
+        //right_servo.setDirection(Servo.Direction.REVERSE);
 
         resetEncoder();
 
-        calibrated_positions.put("FIRST_ELBOW_MIN", null);
-        calibrated_positions.put("FIRST_ELBOW_MAX", null);
-        calibrated_positions.put("SECOND_ELBOW_MIN", null);
-        calibrated_positions.put("SECOND_ELBOW_MAX", null);
+        calibrated_positions.put("FIRST_ELBOW_MIN", -560);
+        calibrated_positions.put("FIRST_ELBOW_MAX", 560);
+        calibrated_positions.put("SECOND_ELBOW_MIN", -560);
+        calibrated_positions.put("SECOND_ELBOW_MAX", 560);
 
-        if (calibrated_positions.get("FIRST_ELBOW_MIN") == null) calibrate();
-
-        MOVE_HD_BY = Math.abs(calibrated_positions.get("FIRST_ELBOW_MAX") - calibrated_positions.get("FIRST_ELBOW_MIN") / SMOOTHNESS_OF_TURNING);
-        MOVE_CORE_BY = Math.abs(calibrated_positions.get("SECOND_ELBOW_MAX") - calibrated_positions.get("SECOND_ELBOW_MIN") / SMOOTHNESS_OF_TURNING);
-
-    }
-
-    public void calibrate() {
-
-        while(!opmode.gamepad1.a) {
-            opmode.telemetry.addLine("> FIRST ELBOW MIN POSITION (PRESS A WHEN SET)");
-            opmode.telemetry.update();
-        }
-
-        calibrated_positions.replace("FIRST_ELBOW_MIN", hd_left_motor.getCurrentPosition());
-        opmode.sleep(1000);
-
-        while (!opmode.gamepad1.a) {
-            opmode.telemetry.addLine("> FIRST ELBOW MAX POSITION (PRESS A WHEN SET)");
-            opmode.telemetry.update();
-        }
-
-        calibrated_positions.replace("FIRST_ELBOW_MAX", hd_left_motor.getCurrentPosition());
-        opmode.sleep(1000);
-
-        while(!opmode.gamepad1.a) {
-            opmode.telemetry.addLine("> SECOND ELBOW MIN POSITION (PRESS A WHEN SET)");
-            opmode.telemetry.update();
-        }
-
-        calibrated_positions.replace("SECOND_ELBOW_MIN", core_left_motor.getCurrentPosition());
-        opmode.sleep(1000);
-
-        while (!opmode.gamepad1.a) {
-            opmode.telemetry.addLine("> SECOND ELBOW MAX POSITION (PRESS A WHEN SET)");
-            opmode.telemetry.update();
-        }
-
-        calibrated_positions.replace("SECOND_ELBOW_MAX", core_left_motor.getCurrentPosition());
-        opmode.sleep(1000);
-
-    }
-
-    private boolean normalizeHD() {
-
-        boolean fix = false;
-        int fix_position = 0;
-
-        if (hd_left_motor.getCurrentPosition() > calibrated_positions.get("FIRST_ELBOW_MAX")) {
-            fix_position = calibrated_positions.get("FIRST_ELBOW_MAX");
-            fix = true;
-        }
-
-        if (hd_left_motor.getCurrentPosition() < calibrated_positions.get("FIRST_ELBOW_MIN")) {
-            fix_position = calibrated_positions.get("FIRST_ELBOW_MIN");
-            fix = true;
-        }
-
-        if (fix) {
-            moveHDTo(1, fix_position);
-            return true;
-        }
-
-        return fix;
-
-    }
-
-    private boolean normalizeCORE() {
-
-        boolean fix = false;
-        int fix_position = 0;
-
-        if (core_left_motor.getCurrentPosition() > calibrated_positions.get("FIRST_ELBOW_MAX")) {
-            fix_position = calibrated_positions.get("FIRST_ELBOW_MAX");
-            fix = true;
-        }
-
-        if (core_left_motor.getCurrentPosition() < calibrated_positions.get("FIRST_ELBOW_MIN")) {
-            fix_position = calibrated_positions.get("FIRST_ELBOW_MIN");
-            fix = true;
-        }
-
-        if (fix) {
-            moveCORETo(1, fix_position);
-            return true;
-        }
-
-        return fix;
-
-    }
-
-    private void moveHDTo(float power, int pos) {
-
-        hd_left_motor.setMode(RunMode.RUN_TO_POSITION);
-        hd_right_motor.setMode(RunMode.RUN_TO_POSITION);
-
-        hd_left_motor.setTargetPosition(pos);
-        hd_right_motor.setTargetPosition(pos);
-
-        hd_left_motor.setPower(power);
-        hd_right_motor.setPower(power);
-
-    }
-
-    private void moveCORETo(float power, int pos) {
-
-        core_left_motor.setMode(RunMode.RUN_TO_POSITION);
-        core_right_motor.setMode(RunMode.RUN_TO_POSITION);
-
-        core_left_motor.setTargetPosition(pos);
-        core_right_motor.setTargetPosition(pos);
-
-        core_left_motor.setPower(power);
-        core_right_motor.setPower(power);
-
-    }
-
-    public void moveHDMotorsUp() {
-
-        if (normalizeHD() // if the motors are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() + MOVE_HD_BY > calibrated_positions.get("FIRST_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() - MOVE_HD_BY < calibrated_positions.get("FIRST_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        moveHDTo(HD_MOTOR_POWER, hd_left_motor.getCurrentPosition() + MOVE_HD_BY);
-
-    }
-
-    public void moveHDMotorsDown() {
-
-        if (normalizeHD() // if the motors are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() + MOVE_HD_BY > calibrated_positions.get("FIRST_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() - MOVE_HD_BY < calibrated_positions.get("FIRST_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        moveHDTo(HD_MOTOR_POWER, hd_left_motor.getCurrentPosition() - MOVE_HD_BY);
-
-    }
-
-    public void moveCOREMotorsUp() {
-
-        if (normalizeCORE() // if the motors are greater than max or less than min
-                || core_left_motor.getCurrentPosition() + MOVE_CORE_BY > calibrated_positions.get("SECOND_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || core_left_motor.getCurrentPosition() - MOVE_CORE_BY < calibrated_positions.get("SECOND_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        moveCORETo(CORE_MOTOR_POWER, core_left_motor.getCurrentPosition() + MOVE_CORE_BY);
-
-    }
-
-    public void moveCOREMotorsDown() {
-
-        if (normalizeCORE() // if the motors are greater than max or less than min
-                || core_left_motor.getCurrentPosition() + MOVE_CORE_BY > calibrated_positions.get("SECOND_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || core_left_motor.getCurrentPosition() - MOVE_CORE_BY < calibrated_positions.get("SECOND_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        moveCORETo(CORE_MOTOR_POWER, core_left_motor.getCurrentPosition() - MOVE_CORE_BY);
-
-    }
-
-    public void freezeHD() {
-
-        if (normalizeHD() // if the motors are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() + MOVE_HD_BY > calibrated_positions.get("FIRST_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || hd_left_motor.getCurrentPosition() - MOVE_HD_BY < calibrated_positions.get("FIRST_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        if (!frozen_hd) {
-
-            frozen_hd = true;
-            frozen_hd_pos = hd_left_motor.getCurrentPosition();
-
-        }
-
-        moveHDTo(1, frozen_hd_pos);
-
-    }
-
-    public void unfreezeHD() {
-        frozen_hd = false;
-    }
-
-    public void freezeCORE() {
-
-        if (normalizeCORE() // if the motors are greater than max or less than min
-                || core_left_motor.getCurrentPosition() + MOVE_CORE_BY > calibrated_positions.get("SECOND_ELBOW_MAX") // or the expected positions are greater than max or less than min
-                || core_left_motor.getCurrentPosition() - MOVE_CORE_BY < calibrated_positions.get("SECOND_ELBOW_MIN"))
-            return; // don't do anything just return
-
-        if (!frozen_core) {
-
-            frozen_core = true;
-            frozen_core_pos = core_left_motor.getCurrentPosition();
-
-        }
-
-        moveCORETo(1, frozen_core_pos);
-
-    }
-
-    public void unfreezeCORE() {
-        frozen_core = false;
     }
 
     public void spin(Servo.Direction d) {
@@ -322,24 +118,199 @@ public class Arm {
 
     }
 
+    public void moveHDTo(float power, int position) {
+
+        hd_left_motor.setTargetPosition(position);
+        hd_right_motor.setTargetPosition(position);
+        virtual_hd_position = position;
+        hd_left_motor.setPower(power);
+        hd_right_motor.setPower(power);
+
+    }
+
+    public void moveHDUp() {
+
+        int next_position = virtual_hd_position + MOVE_HD_BY;
+        int max = calibrated_positions.get("FIRST_ELBOW_MAX");
+        boolean positive = Integer.signum(max) > 0;
+        if (positive && next_position > max || !positive && next_position < max) next_position = max;
+
+        moveHDTo(HD_MOTOR_POWER, next_position);
+
+    }
+
+    public void moveHDDown() {
+
+        int next_position = virtual_hd_position - MOVE_HD_BY;
+        int min = calibrated_positions.get("FIRST_ELBOW_MIN");
+        boolean positive = Integer.signum(min) > 0;
+        if (positive && next_position > min || !positive && next_position < min) next_position = min;
+
+        moveHDTo(HD_MOTOR_POWER, next_position);
+
+    }
+
+    public void freezeHD() {
+
+        moveHDTo(1, virtual_hd_position);
+
+    }
+
+    public void moveCORETo(float power, int position) {
+
+        core_left_motor.setTargetPosition(position);
+        core_right_motor.setTargetPosition(position);
+        virtual_core_position = position;
+        core_left_motor.setPower(power);
+        core_right_motor.setPower(power);
+
+    }
+
+    public void moveCOREUp() {
+
+        int next_position = virtual_core_position + MOVE_CORE_BY;
+        int max = calibrated_positions.get("SECOND_ELBOW_MAX");
+        boolean positive = Integer.signum(max) > 0;
+        if (positive && next_position > max || !positive && next_position < max) next_position = max;
+
+        moveCORETo(CORE_MOTOR_POWER, next_position);
+
+    }
+
+    public void moveCOREDown() {
+
+        int next_position = virtual_core_position - MOVE_CORE_BY;
+        int min = calibrated_positions.get("SECOND_ELBOW_MIN");
+        boolean positive = Integer.signum(min) > 0;
+        if (positive && next_position > min || !positive && next_position < min) next_position = min;
+
+        moveCORETo(CORE_MOTOR_POWER, next_position);
+
+    }
+
+    public void freezeCORE() {
+
+        moveCORETo(1, virtual_core_position);
+
+    }
+
+    public void sleep(long ms) {
+
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+    }
+
     public void relax() { // set everything to its min position (no power required position)
-        
-        moveHDTo(HD_MOTOR_POWER, calibrated_positions.get("FIRST_ELBOW_MIN"));
-        moveCORETo(CORE_MOTOR_POWER, calibrated_positions.get("SECOND_ELBOW_MIN"));
+
+        moveHDTo(HD_MOTOR_POWER, (calibrated_positions.get("FIRST_ELBOW_MIN") == null) ? 0 : calibrated_positions.get("FIRST_ELBOW_MIN"));
+        moveCORETo(CORE_MOTOR_POWER, (calibrated_positions.get("SECOND_ELBOW_MIN") == null) ? 0 : calibrated_positions.get("SECOND_ELBOW_MIN"));
+        sleep(500);
         spinning = false;
 
     }
 
+    public void resetCalibration() {
+        for (Map.Entry<String, Integer> e : calibrated_positions.entrySet()) calibrated_positions.replace(e.getKey(), null);
+    }
+
+    public void calibrate() {
+
+        if (calibrated_positions.get("FIRST_ELBOW_MIN") == null) calibrated_positions.replace("FIRST_ELBOW_MIN", 0);
+        if (calibrated_positions.get("SECOND_ELBOW_MIN") == null) calibrated_positions.replace("SECOND_ELBOW_MIN", 0);
+
+        if (calibrated_positions.get("FIRST_ELBOW_MAX") == null) {
+
+            if (opmode.gamepad1.dpad_up) {
+                moveHDTo(HD_MOTOR_POWER, virtual_hd_position - MOVE_HD_BY);
+            } else if (opmode.gamepad1.dpad_down) {
+                moveHDTo(HD_MOTOR_POWER, virtual_hd_position + MOVE_HD_BY);
+            } else {
+                freezeHD();
+            }
+
+            calibrationTelemetry();
+            opmode.telemetry.addLine("\n> FIRST ELBOW MAX POSITION (PRESS A WHEN SET)");
+            opmode.telemetry.update();
+
+            if (opmode.gamepad1.a) {
+                calibrated_positions.replace("FIRST_ELBOW_MAX", hd_left_motor.getCurrentPosition());
+            }
+
+            if (calibrated_positions.get("FIRST_ELBOW_MAX") != null) sleep(250);
+
+            return;
+
+        } else if (calibrated_positions.get("SECOND_ELBOW_MAX") == null) {
+
+            if (opmode.gamepad1.dpad_up) {
+                moveCORETo(CORE_MOTOR_POWER, virtual_core_position - MOVE_CORE_BY);
+            } else if (opmode.gamepad1.dpad_down) {
+                moveCORETo(CORE_MOTOR_POWER, virtual_core_position + MOVE_CORE_BY);
+            } else {
+                freezeCORE();
+            }
+
+            calibrationTelemetry();
+            opmode.telemetry.addLine("\n> SECOND ELBOW MAX POSITION (PRESS A WHEN SET)");
+            opmode.telemetry.update();
+
+            if (opmode.gamepad1.a) {
+                calibrated_positions.replace("SECOND_ELBOW_MAX", core_left_motor.getCurrentPosition());
+            }
+
+        }
+
+        if (calibrated_positions.get("SECOND_ELBOW_MAX") != null) {
+            calibrating = false;
+        }
+
+    }
+
+    void line() {opmode.telemetry.addLine("\n---------------------------------------------------------------------\n");}
+
+    private void calibrationTelemetry() {
+
+        opmode.telemetry.addLine("*CALIBRATION SCREEN*");
+        line();
+        opmode.telemetry.addData("status", "calibrating");
+        line();
+        opmode.telemetry.addData("left hd motor position", hd_left_motor.getCurrentPosition());
+        opmode.telemetry.addData("right hd motor position", hd_right_motor.getCurrentPosition());
+        line();
+        opmode.telemetry.addData("left core motor position", core_left_motor.getCurrentPosition());
+        opmode.telemetry.addData("right core motor position", core_right_motor.getCurrentPosition());
+        line();
+        opmode.telemetry.addData("FIRST_ELBOW_MIN", (calibrated_positions.get("FIRST_ELBOW_MIN") == null) ? "uncalibrated" : calibrated_positions.get("FIRST_ELBOW_MIN"));
+        opmode.telemetry.addData("FIRST_ELBOW_MAX", (calibrated_positions.get("FIRST_ELBOW_MAX") == null) ? "uncalibrated" : calibrated_positions.get("FIRST_ELBOW_MAX"));
+        opmode.telemetry.addData("SECOND_ELBOW_MIN", (calibrated_positions.get("SECOND_ELBOW_MIN") == null) ? "uncalibrated" : calibrated_positions.get("SECOND_ELBOW_MIN"));
+        opmode.telemetry.addData("SECOND_ELBOW_MAX", (calibrated_positions.get("SECOND_ELBOW_MAX") == null) ? "uncalibrated" : calibrated_positions.get("SECOND_ELBOW_MAX"));
+        line();
+    }
+
     public void telemetry() {
 
+        line();
         opmode.telemetry.addData("hd motor power", hd_left_motor.getPower());
         opmode.telemetry.addData("core motor power", core_left_motor.getPower());
-        opmode.line();
-        opmode.telemetry.addData("hd motor position", hd_left_motor.getCurrentPosition());
-        opmode.telemetry.addData("core motor position", core_left_motor.getCurrentPosition());
-        opmode.line();
+        line();
+        opmode.telemetry.addData("left hd motor position", hd_left_motor.getCurrentPosition());
+        opmode.telemetry.addData("right hd motor position", hd_right_motor.getCurrentPosition());
+        line();
+        opmode.telemetry.addData("left core motor position", core_left_motor.getCurrentPosition());
+        opmode.telemetry.addData("right core motor position", core_right_motor.getCurrentPosition());
+        line();
+        opmode.telemetry.addData("FIRST_ELBOW_MIN", (calibrated_positions.get("FIRST_ELBOW_MIN") == null) ? "uncalibrated" : calibrated_positions.get("FIRST_ELBOW_MIN"));
+        opmode.telemetry.addData("FIRST_ELBOW_MAX", (calibrated_positions.get("FIRST_ELBOW_MAX") == null) ? "uncalibrated" : calibrated_positions.get("FIRST_ELBOW_MAX"));
+        opmode.telemetry.addData("SECOND_ELBOW_MIN", (calibrated_positions.get("SECOND_ELBOW_MIN") == null) ? "uncalibrated" : calibrated_positions.get("SECOND_ELBOW_MIN"));
+        opmode.telemetry.addData("SECOND_ELBOW_MAX", (calibrated_positions.get("SECOND_ELBOW_MAX") == null) ? "uncalibrated" : calibrated_positions.get("SECOND_ELBOW_MAX"));
+
+        line();
         opmode.telemetry.addData("spinning", spinning);
-        opmode.telemetry.addData("servo position", left_servo.getPosition());
+        //opmode.telemetry.addData("servo position", left_servo.getPosition());
 
     }
 
