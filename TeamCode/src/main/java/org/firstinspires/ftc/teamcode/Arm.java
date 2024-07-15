@@ -10,13 +10,6 @@ import java.util.Map;
 
 public class Arm {
 
-    // convert degrees to arm positions?
-    // get 180 degree height and the ticks the robot is at at that position
-    // lock it between two buttons one bringing first elbow up to 180 and one pulling it down to 0.
-    // x is the 0 position y is the 180 position. press a to raise arm, (button here) to lower it.
-    // clamp it?
-
-    // got explained the prototype's arms
     // ONLY RESET ENCODERS ONCE.
 
     // hardware
@@ -32,10 +25,10 @@ public class Arm {
     /*
     POSITIONS (IN TICKS)
     --------------------
-    FIRST_ELBOW_MIN - HD motors of arm down
-    FIRST_ELBOW_MAX - HD motors of arm up
-    SECOND_ELBOW_MIN - CORE motors of arm down
-    SECOND_ELBOW_MAX - CORE motors of arm up
+    FIRST_ELBOW_MIN - HD motors down
+    FIRST_ELBOW_MAX - HD motors up
+    SECOND_ELBOW_MIN - CORE motors down
+    SECOND_ELBOW_MAX - CORE motors up
      */
 
     // toggles
@@ -45,8 +38,7 @@ public class Arm {
     // constants
     private final float SERVO_POWER = 1000;
     private final float HD_MOTOR_POWER = 0.1f;
-    private final float CORE_MOTOR_POWER = 0.2f;
-    private final int SMOOTHNESS_OF_TURNING = 10; // moves (max - min) / SMOOTHNESS_OF_TURNING ticks for every frame that you are pressing the up button for.
+    private final float CORE_MOTOR_POWER = 0.1f;
 
     private int MOVE_HD_BY = 50;
     private int MOVE_CORE_BY = 10;
@@ -78,8 +70,8 @@ public class Arm {
         hd_right_motor = opmode.hardwareMap.get(DcMotor.class, "hd2");
         core_left_motor = opmode.hardwareMap.get(DcMotor.class, "core1");
         core_right_motor = opmode.hardwareMap.get(DcMotor.class, "core2");
-        //left_servo = opmode.hardwareMap.get(Servo.class, "servo1");
-        //right_servo = opmode.hardwareMap.get(Servo.class, "servo2");
+        left_servo = opmode.hardwareMap.get(Servo.class, "servo1");
+        right_servo = opmode.hardwareMap.get(Servo.class, "servo2");
 
         hd_left_motor.setMode(RunMode.RUN_TO_POSITION);
         hd_right_motor.setMode(RunMode.RUN_TO_POSITION);
@@ -95,14 +87,14 @@ public class Arm {
         hd_right_motor.setDirection(DcMotor.Direction.REVERSE);
         core_left_motor.setDirection(DcMotor.Direction.FORWARD);
         core_right_motor.setDirection(DcMotor.Direction.REVERSE);
-        //left_servo.setDirection(Servo.Direction.FORWARD);
-        //right_servo.setDirection(Servo.Direction.REVERSE);
+        left_servo.setDirection(Servo.Direction.FORWARD);
+        right_servo.setDirection(Servo.Direction.REVERSE);
 
         resetEncoder();
 
-        calibrated_positions.put("FIRST_ELBOW_MIN", -560);
+        calibrated_positions.put("FIRST_ELBOW_MIN", 0);
         calibrated_positions.put("FIRST_ELBOW_MAX", 560);
-        calibrated_positions.put("SECOND_ELBOW_MIN", -560);
+        calibrated_positions.put("SECOND_ELBOW_MIN", 0);
         calibrated_positions.put("SECOND_ELBOW_MAX", 560);
 
     }
@@ -194,7 +186,7 @@ public class Arm {
 
     }
 
-    public void sleep(long ms) {
+    private void sleep(long ms) {
 
         try {
             Thread.sleep(ms);

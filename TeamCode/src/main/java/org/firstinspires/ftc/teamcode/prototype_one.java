@@ -107,7 +107,7 @@ public class prototype_one extends OpMode {
         // set up arms
         arm = new Arm(this);
         arm.init();
-        arm.spinning = true;
+        arm.spinning = false;
         arm.calibrating = false;
 
     }
@@ -159,7 +159,7 @@ public class prototype_one extends OpMode {
             arm.freezeCORE();
         }
 
-        // arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
+        arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
 
         // drive mode
         //driveTank();
