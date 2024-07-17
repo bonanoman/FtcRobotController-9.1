@@ -132,7 +132,7 @@ public class Arm {
 
     public void freezeHD() {
         if (freeze_hd == null) freeze_hd = hd_left_motor.getCurrentPosition();
-        moveHDTo(HD_MOTOR_POWER, freeze_hd);
+        moveHDTo(1, freeze_hd);
     }
 
     public void moveMIDDLETo(float power, Integer position) {
@@ -158,7 +158,7 @@ public class Arm {
 
     public void freezeMIDDLE() {
         if (freeze_middle == null) freeze_middle = hd_middle_motor.getCurrentPosition();
-        moveMIDDLETo(MIDDLE_MOTOR_POWER, freeze_middle);
+        moveMIDDLETo(1, freeze_middle);
     }
 
     private void sleep(long ms) {
