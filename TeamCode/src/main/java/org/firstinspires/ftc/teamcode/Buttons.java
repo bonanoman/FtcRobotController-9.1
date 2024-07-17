@@ -6,14 +6,10 @@ public class Buttons {
 
     private int incrementer;
     private final ArrayList<Boolean> LIST;
-    private int held_incrementer;
-    private final ArrayList<double[]> HELD_LIST;
 
     public Buttons(){
-        this.held_incrementer = 0;
         this.incrementer = 0;
         this.LIST = new ArrayList<>();
-        this.HELD_LIST = new ArrayList<>();
     }
 
     public boolean ifPressed(boolean button){ // down = do you want to detect when the button is pressed down or up
@@ -37,7 +33,6 @@ public class Buttons {
 
     public void reset(){
         this.incrementer = 0;
-        this.held_incrementer = 0;
     }
 
 }

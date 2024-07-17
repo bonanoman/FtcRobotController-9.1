@@ -6,8 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 @TeleOp(name="prototype one", group="brion's opmodes!")
 public class prototype_one extends OpMode {
 
@@ -109,14 +107,13 @@ public class prototype_one extends OpMode {
         arm.init();
         arm.spinning = false;
         arm.calibrating = false;
+        arm.moveMIDDLETo(1, 0);
 
     }
 
     @Override
     public void start() {
         resetRuntime();
-        arm.freezeHD();
-        arm.freezeCORE();
     }
 
     @Override
@@ -128,6 +125,7 @@ public class prototype_one extends OpMode {
         boolean b_pressed = buttons.ifPressed(gamepad1.b);
         boolean options_pressed = buttons.ifPressed(gamepad1.options);
         boolean share_pressed = buttons.ifPressed(gamepad1.share);
+        boolean drive = true;
 
         if (options_pressed) {
             arm.resetCalibration();
@@ -142,27 +140,35 @@ public class prototype_one extends OpMode {
         if (x_pressed) holding = !holding;
         if (b_pressed) arm.spinning = !arm.spinning;
 
+        telemetry.addData("A", gamepad1.a);
+        telemetry.addData("Y", gamepad1.y);
+        telemetry.addData("A", gamepad1.a);
+
         // arm
         if (gamepad1.a) {
+            drive = false;
             arm.moveHDUp();
         } else if (gamepad1.y) {
+            drive = false;
             arm.moveHDDown();
         } else {
             arm.freezeHD();
         }
 
         if (gamepad1.dpad_down) {
-            arm.moveCOREUp();
+            drive = false;
+            arm.moveMIDDLEUp();
         } else if (gamepad1.dpad_up) {
-            arm.moveCOREDown();
+            drive = false;
+            arm.moveMIDDLEDown();
         } else {
-            arm.freezeCORE();
+            arm.freezeMIDDLE();
         }
 
         arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
 
         // drive mode
-        //driveTank();
+        //if (drive) driveTank();
 
         // telemetry
         line(); // just makes a line of the "-" character.
@@ -172,21 +178,13 @@ public class prototype_one extends OpMode {
         telemetry.addData("right joystick", "(%3.2f, %3.2f)", gamepad1.right_stick_x, -gamepad1.right_stick_y);
         telemetry.addData("right trigger", gamepad1.right_trigger);
         line();
-        //telemetry.addData("left wheels power", "%3.2f", left_motor.getPower());
-        //telemetry.addData("right wheels power", "%3.2f", right_motor.getPower());
+        //telemetry.addData("left wheels power", "%2.1f", left_motor.getPower());
+        //telemetry.addData("right wheels power", "%2.1f", right_motor.getPower());
         arm.telemetry();
 
         telemetry.update();
 
         buttons.reset();
-
-    }
-
-    @Override
-    public void stop() {
-
-        setPower(0, 0);
-        arm.relax();
 
     }
 
