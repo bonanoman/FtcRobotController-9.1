@@ -21,7 +21,7 @@ public class Arm {
     private Integer min_middle_motor = 0;
     private Integer max_middle_motor = -1160;
     private Integer min_hd_motor = 0;
-    private Integer max_hd_motor = -1160; // presets
+    private Integer max_hd_motor = -2320; // presets
     /*
     POSITIONS (IN TICKS)
     --------------------
@@ -161,6 +161,24 @@ public class Arm {
         moveMIDDLETo(1, freeze_middle);
     }
 
+    public void moveArmUp() {
+
+        freeze_hd = null;
+        freeze_middle = null;
+        moveMIDDLETo(0.025f, max_middle_motor);
+        moveHDTo(0.05f, max_hd_motor);
+
+    }
+
+    public void moveArmDown() {
+
+        freeze_hd = null;
+        freeze_middle = null;
+        moveMIDDLETo(0.025f, min_middle_motor);
+        moveHDTo(0.05f, min_hd_motor);
+
+    }
+
     private void sleep(long ms) {
         try {
             Thread.sleep(ms);
@@ -182,9 +200,9 @@ public class Arm {
 
         if (max_hd_motor == null) {
 
-            if (opmode.gamepad1.dpad_up) {
+            if (opmode.gamepad2.dpad_up) {
                 moveHDTo(HD_MOTOR_POWER, virtual_hd_position - MOVE_HD_BY);
-            } else if (opmode.gamepad1.dpad_down) {
+            } else if (opmode.gamepad2.dpad_down) {
                 moveHDTo(HD_MOTOR_POWER, virtual_hd_position + MOVE_HD_BY);
             }
 
@@ -192,7 +210,7 @@ public class Arm {
             opmode.telemetry.addLine("\n> FIRST ELBOW MAX POSITION (PRESS A WHEN SET)");
             opmode.telemetry.update();
 
-            if (opmode.gamepad1.a) {
+            if (opmode.gamepad2.a) {
                 max_hd_motor = hd_left_motor.getCurrentPosition();
             }
 
@@ -202,9 +220,9 @@ public class Arm {
 
         } else if (max_middle_motor == null) {
 
-            if (opmode.gamepad1.dpad_up) {
+            if (opmode.gamepad2.dpad_up) {
                 moveMIDDLETo(MIDDLE_MOTOR_POWER, virtual_middle_position - MOVE_MIDDLE_BY);
-            } else if (opmode.gamepad1.dpad_down) {
+            } else if (opmode.gamepad2.dpad_down) {
                 moveMIDDLETo(MIDDLE_MOTOR_POWER, virtual_middle_position + MOVE_MIDDLE_BY);
             }
 
@@ -212,7 +230,7 @@ public class Arm {
             opmode.telemetry.addLine("\n> SECOND ELBOW MAX POSITION (PRESS A WHEN SET)");
             opmode.telemetry.update();
 
-            if (opmode.gamepad1.a) {
+            if (opmode.gamepad2.a) {
                 max_middle_motor = hd_middle_motor.getCurrentPosition();
             }
 
