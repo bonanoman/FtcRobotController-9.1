@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -13,9 +13,9 @@ public class Arm {
 
     // hardware
     private OpMode opmode;
-    private DcMotor hd_left_motor;
-    private DcMotor hd_right_motor;
-    private DcMotor hd_middle_motor;
+    private DcMotorEx hd_left_motor;
+    private DcMotorEx hd_right_motor;
+    private DcMotorEx hd_middle_motor;
     private CRServo spin_servo;
 
     private Integer min_middle_motor = 0;
@@ -67,20 +67,20 @@ public class Arm {
 
     public void init() {
 
-        hd_left_motor = opmode.hardwareMap.get(DcMotor.class, "hd1");
-        hd_right_motor = opmode.hardwareMap.get(DcMotor.class, "hd2");
-        hd_middle_motor = opmode.hardwareMap.get(DcMotor.class, "hd3");
+        hd_left_motor = opmode.hardwareMap.get(DcMotorEx.class, "hd1");
+        hd_right_motor = opmode.hardwareMap.get(DcMotorEx.class, "hd2");
+        hd_middle_motor = opmode.hardwareMap.get(DcMotorEx.class, "hd3");
         spin_servo = opmode.hardwareMap.get(CRServo.class, "crs");
 
         hd_left_motor.setMode(RunMode.RUN_USING_ENCODER);
         hd_right_motor.setMode(RunMode.RUN_USING_ENCODER);
 
-        hd_left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        hd_right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        hd_left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        hd_right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        hd_left_motor.setDirection(DcMotor.Direction.FORWARD);
-        hd_right_motor.setDirection(DcMotor.Direction.REVERSE);
-        hd_middle_motor.setDirection(DcMotor.Direction.FORWARD);
+        hd_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
+        hd_right_motor.setDirection(DcMotorEx.Direction.FORWARD);
+        hd_middle_motor.setDirection(DcMotorEx.Direction.FORWARD);
 
         spin_servo.setDirection(DcMotorSimple.Direction.FORWARD);
 

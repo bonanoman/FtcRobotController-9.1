@@ -2,17 +2,17 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+//import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="prototype one", group="brion's opmodes!")
 public class prototype_one extends OpMode {
 
     // hardware
-    private DcMotor left_motor;
-    private DcMotor right_motor;
-    private DistanceSensor distance_sensor;
+    private DcMotorEx left_motor;
+    private DcMotorEx right_motor;
+    //private DistanceSensor distance_sensor;
 
     // buttons & arm set up class
     private Buttons buttons;
@@ -50,10 +50,9 @@ public class prototype_one extends OpMode {
 
         left_motor.setPower(left_power);
         right_motor.setPower(right_power);
-
     }
 
-    private void driveTank() {setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
+    private void driveTank() {/*setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);*/}
 
     private double range_deceleration() {
         /*
@@ -84,18 +83,18 @@ public class prototype_one extends OpMode {
         telemetry.setMsTransmissionInterval(50);
 
         // set up motor
-        //left_motor = hardwareMap.get(DcMotor.class, "motor1");
-        //right_motor = hardwareMap.get(DcMotor.class, "motor2");
-        /*
-        left_motor.setDirection(DcMotor.Direction.FORWARD);
-        right_motor.setDirection(DcMotor.Direction.REVERSE);
+        left_motor = hardwareMap.get(DcMotorEx.class, "motor1");
+        right_motor = hardwareMap.get(DcMotorEx.class, "motor2");
 
-        left_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        right_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        left_motor.setDirection(DcMotorEx.Direction.FORWARD);
+        right_motor.setDirection(DcMotorEx.Direction.REVERSE);
 
-        left_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        right_motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        */
+        left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+
+        left_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        right_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
         // set up distance sensor
         //distance_sensor = hardwareMap.get(DistanceSensor.class, "ds");
 
@@ -107,7 +106,6 @@ public class prototype_one extends OpMode {
         arm.init();
         arm.spinning = false;
         arm.calibrating = false;
-        arm.moveMIDDLETo(1, 0);
 
     }
 
@@ -168,7 +166,7 @@ public class prototype_one extends OpMode {
         arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
 
         // drive mode
-        //if (drive) driveTank();
+        if (drive) driveTank();
 
         // telemetry
         line(); // just makes a line of the "-" character.
