@@ -138,10 +138,6 @@ public class prototype_one extends OpMode {
         if (x_pressed) holding = !holding;
         if (b_pressed) arm.spinning = !arm.spinning;
 
-        telemetry.addData("A", gamepad1.a);
-        telemetry.addData("Y", gamepad1.y);
-        telemetry.addData("A", gamepad1.a);
-
         // arm
         if (gamepad1.a) {
             drive = false;
