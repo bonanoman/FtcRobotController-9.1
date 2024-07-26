@@ -19,9 +19,6 @@ public class prototype_one extends OpMode {
     private Buttons buttons;
     private Arm arm;
 
-    // toggles
-    private boolean holding = false;
-
     // constants
     private final float SCALE = 0.5f;
     private final float MINIMUM_DISTANCE = 6;
@@ -114,8 +111,6 @@ public class prototype_one extends OpMode {
     @Override
     public void loop() {
 
-        boolean x_pressed = buttons.ifPressed(gamepad2.x);
-        boolean b_pressed = buttons.ifPressed(gamepad2.b);
         boolean options_pressed = buttons.ifPressed(gamepad2.options);
         boolean share_pressed = buttons.ifPressed(gamepad2.share);
         boolean drive = true;
@@ -131,8 +126,6 @@ public class prototype_one extends OpMode {
             return;
         }
         if (share_pressed) arm.resetEncoder();
-        if (x_pressed) holding = !holding;
-        if (b_pressed) arm.spinning = !arm.spinning;
 
         // arm
         if (gamepad2.right_bumper) {
@@ -143,10 +136,10 @@ public class prototype_one extends OpMode {
             arm.moveArmDown();
         }
 
-        if (gamepad2.a) {
+        if (gamepad2.cross) {
             drive = false;
             arm.moveHDUp();
-        } else if (gamepad2.y) {
+        } else if (gamepad2.triangle) {
             drive = false;
             arm.moveHDDown();
         } else {
@@ -194,11 +187,23 @@ public class prototype_one extends OpMode {
 
         }
 
-        arm.spin((holding) ? Servo.Direction.REVERSE : Servo.Direction.FORWARD); // holding is true? reverse to hold it. false? forward to spit it out
+        arm.spinning = (gamepad2.square || gamepad2.circle);
+        if (gamepad2.circle) {
+            arm.spin(Servo.Direction.FORWARD);
+        } else if (gamepad2.square) {
+            arm.spin(Servo.Direction.REVERSE);
+        }
 
         // drive mode
         if (drive) driveTank();
-        if (!drive && !arrow_key_driving) gamepad1.rumble(0.1, 0.1, Gamepad.RUMBLE_DURATION_CONTINUOUS);
+        int tolerance = 5;
+        boolean using_joystick = (
+                Math.abs(gamepad1.left_stick_x) > tolerance ||
+                        Math.abs(gamepad1.left_stick_y) > tolerance ||
+                        Math.abs(gamepad1.right_stick_x) > tolerance ||
+                        Math.abs(gamepad1.right_stick_y) > tolerance
+                );
+        if (!drive && !arrow_key_driving && using_joystick) gamepad1.rumble(0.1, 0.1, Gamepad.RUMBLE_DURATION_CONTINUOUS);
 
         // telemetry
         line(); // just makes a line of the "-" character.
