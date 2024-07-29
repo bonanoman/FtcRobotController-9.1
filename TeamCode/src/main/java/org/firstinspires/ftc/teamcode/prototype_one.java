@@ -83,8 +83,8 @@ public class prototype_one extends OpMode {
         left_motor.setDirection(DcMotorEx.Direction.FORWARD);
         right_motor.setDirection(DcMotorEx.Direction.REVERSE);
 
-        left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         left_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         right_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -125,66 +125,65 @@ public class prototype_one extends OpMode {
             arm.calibrate();
             return;
         }
+
         if (share_pressed) arm.resetEncoder();
 
         // arm
+        telemetry.addData("left bumper", gamepad2.left_bumper);
+        telemetry.addData("right bumper", gamepad2.right_bumper);
+
+        boolean bumpers = false;
+
         if (gamepad2.right_bumper) {
             drive = false;
+            bumpers = true;
             arm.moveArmUp();
         } else if (gamepad2.left_bumper) {
             drive = false;
+            bumpers = true;
             arm.moveArmDown();
         }
 
-        if (gamepad2.cross) {
-            drive = false;
-            arm.moveHDUp();
-        } else if (gamepad2.triangle) {
-            drive = false;
-            arm.moveHDDown();
-        } else {
-            arm.freezeHD();
-        }
-
-        if (gamepad2.dpad_down) {
-            drive = false;
-            arm.moveMIDDLEUp();
-        } else if (gamepad2.dpad_up) {
-            drive = false;
-            arm.moveMIDDLEDown();
-        } else {
-            arm.freezeMIDDLE();
+        if (!bumpers) {
+            if (gamepad2.cross) {
+                drive = false;
+                arm.moveHDUp();
+            } else if (gamepad2.triangle) {
+                drive = false;
+                arm.moveHDDown();
+            } else {
+                arm.freezeHD();
+            }
+            if (gamepad2.dpad_down) {
+                drive = false;
+                arm.moveMIDDLEUp();
+            } else if (gamepad2.dpad_up) {
+                drive = false;
+                arm.moveMIDDLEDown();
+            } else {
+                arm.freezeMIDDLE();
+            }
         }
 
         if (gamepad1.dpad_up) {
-
             arrow_key_driving = true;
             drive = false;
             setPower(0.5f, 0.5f);
-
         } else if (gamepad1.dpad_down) {
-
             arrow_key_driving = true;
             drive = false;
             setPower(-0.5f, -0.5f);
-
         } else if (gamepad1.dpad_left) {
-
             arrow_key_driving = true;
             drive = false;
             setPower(-0.5f, 0.5f);
-
         } else if (gamepad1.dpad_right) {
-
             arrow_key_driving = true;
             drive = false;
             setPower(0.5f, -0.5f);
-
         } else {
-
             arrow_key_driving = false;
             setPower(0, 0);
-
         }
 
         arm.spinning = (gamepad2.square || gamepad2.circle);
@@ -192,17 +191,20 @@ public class prototype_one extends OpMode {
             arm.spin(Servo.Direction.FORWARD);
         } else if (gamepad2.square) {
             arm.spin(Servo.Direction.REVERSE);
+        } else {
+            arm.spin(Servo.Direction.FORWARD);
         }
 
         // drive mode
         if (drive) driveTank();
-        int tolerance = 5;
+        double tolerance = 0.05;
         boolean using_joystick = (
                 Math.abs(gamepad1.left_stick_x) > tolerance ||
                         Math.abs(gamepad1.left_stick_y) > tolerance ||
                         Math.abs(gamepad1.right_stick_x) > tolerance ||
                         Math.abs(gamepad1.right_stick_y) > tolerance
-                );
+        );
+
         if (!drive && !arrow_key_driving && using_joystick) gamepad1.rumble(0.1, 0.1, Gamepad.RUMBLE_DURATION_CONTINUOUS);
 
         // telemetry

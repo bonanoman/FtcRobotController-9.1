@@ -19,9 +19,9 @@ public class Arm {
     private CRServo spin_servo;
 
     private Integer min_middle_motor = 0;
-    private Integer max_middle_motor = -1160;
+    private Integer max_middle_motor = -880;
     private Integer min_hd_motor = 0;
-    private Integer max_hd_motor = -2320; // presets
+    private Integer max_hd_motor = -1400; // presets
     /*
     POSITIONS (IN TICKS)
     --------------------
@@ -165,8 +165,8 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        moveMIDDLETo(0.025f, max_middle_motor);
-        moveHDTo(0.05f, max_hd_motor);
+        moveMIDDLETo(0.1f, max_middle_motor);
+        moveHDTo(0.15f, max_hd_motor);
 
     }
 
@@ -174,8 +174,8 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        moveMIDDLETo(0.025f, min_middle_motor);
-        moveHDTo(0.05f, min_hd_motor);
+        moveMIDDLETo(0.1f, min_middle_motor);
+        moveHDTo(0.15f, min_hd_motor);
 
     }
 
@@ -202,8 +202,12 @@ public class Arm {
 
             if (opmode.gamepad2.dpad_up) {
                 moveHDTo(HD_MOTOR_POWER, virtual_hd_position - MOVE_HD_BY);
+                freeze_hd = null;
             } else if (opmode.gamepad2.dpad_down) {
                 moveHDTo(HD_MOTOR_POWER, virtual_hd_position + MOVE_HD_BY);
+                freeze_hd = null;
+            } else {
+                freezeHD();
             }
 
             calibrationTelemetry();
@@ -219,11 +223,16 @@ public class Arm {
             return;
 
         } else if (max_middle_motor == null) {
-
+// -1400 - hd motors
+// m
             if (opmode.gamepad2.dpad_up) {
                 moveMIDDLETo(MIDDLE_MOTOR_POWER, virtual_middle_position - MOVE_MIDDLE_BY);
+                freeze_middle = null;
             } else if (opmode.gamepad2.dpad_down) {
                 moveMIDDLETo(MIDDLE_MOTOR_POWER, virtual_middle_position + MOVE_MIDDLE_BY);
+                freeze_middle = null;
+            } else {
+                freezeMIDDLE();
             }
 
             calibrationTelemetry();
