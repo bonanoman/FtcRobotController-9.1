@@ -246,7 +246,6 @@ public class prototype_one extends OpMode {
         telemetry.update();
 
         buttons.reset();
-
     }
 
 }
