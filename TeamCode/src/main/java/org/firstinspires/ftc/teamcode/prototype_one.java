@@ -24,6 +24,9 @@ public class prototype_one extends OpMode {
     private final float MINIMUM_DISTANCE = 6;
     private final float PADDED_DISTANCE = 6;
 
+    private boolean raising = false;
+    private boolean raised = false;
+
     private void setPower(float left, float right) {
 
         double trigger = gamepad1.right_trigger * SCALE;
@@ -113,6 +116,7 @@ public class prototype_one extends OpMode {
 
         boolean options_pressed = buttons.ifPressed(gamepad2.options);
         boolean share_pressed = buttons.ifPressed(gamepad2.share);
+        boolean guide_pressed = buttons.ifPressed(gamepad2.guide);
         boolean drive = true;
         boolean arrow_key_driving;
 
@@ -124,6 +128,26 @@ public class prototype_one extends OpMode {
         if (arm.calibrating) {
             arm.calibrate();
             return;
+        }
+
+        if (!raised) {
+
+            telemetry.addLine("PRESS HOME TO INITIATE.");
+
+            if (guide_pressed) {
+                raising = true;
+            }
+
+            if (raising) {
+                raised = arm.raise();
+                if (raised) {
+                    raising = false;
+                    arm.resetEncoder();
+                }
+            }
+
+            return;
+
         }
 
         if (share_pressed) arm.resetEncoder();

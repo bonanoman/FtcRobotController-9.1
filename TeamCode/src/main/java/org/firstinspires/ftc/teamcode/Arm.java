@@ -19,9 +19,9 @@ public class Arm {
     private CRServo spin_servo;
 
     private Integer min_middle_motor = 0;
-    private Integer max_middle_motor = -880;
+    private Integer max_middle_motor = 1576;
     private Integer min_hd_motor = 0;
-    private Integer max_hd_motor = -1400; // presets
+    private Integer max_hd_motor = -1234; // presets
     /*
     POSITIONS (IN TICKS)
     --------------------
@@ -39,9 +39,10 @@ public class Arm {
     private final float SPIN_SERVO_POWER = 1;
     private final float HD_MOTOR_POWER = 0.1f;
     private final float MIDDLE_MOTOR_POWER = 0.1f;
+    private final Integer RAISED_POSITION = 350;
 
-    private Integer MOVE_HD_BY = 50;
-    private Integer MOVE_MIDDLE_BY = 50;
+    private Integer MOVE_HD_BY = 70;
+    private Integer MOVE_MIDDLE_BY = 70;
 
     private Integer virtual_hd_position = 0;
     private Integer virtual_middle_position = 0;
@@ -77,6 +78,7 @@ public class Arm {
 
         hd_left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         hd_right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        hd_middle_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         hd_left_motor.setDirection(DcMotorEx.Direction.REVERSE);
         hd_right_motor.setDirection(DcMotorEx.Direction.FORWARD);
@@ -107,6 +109,25 @@ public class Arm {
         virtual_hd_position = position;
         hd_left_motor.setPower(power);
         hd_right_motor.setPower(power);
+
+    }
+
+    public boolean raise() {
+
+        boolean raised = false;
+        int distance = Math.abs(hd_middle_motor.getCurrentPosition() - RAISED_POSITION);
+
+        if (distance > 50) {
+
+            moveMIDDLETo(MIDDLE_MOTOR_POWER, RAISED_POSITION);
+
+        } else {
+
+            raised = true;
+
+        }
+
+        return raised;
 
     }
 
@@ -165,8 +186,10 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        moveMIDDLETo(0.1f, max_middle_motor);
-        moveHDTo(0.15f, max_hd_motor);
+        Integer mid_next_position = clamp(virtual_middle_position - MOVE_MIDDLE_BY, min_middle_motor, max_middle_motor);
+        Integer hd_next_position = clamp(virtual_hd_position + MOVE_HD_BY, min_hd_motor, max_hd_motor);
+        moveMIDDLETo(0.2f, mid_next_position);
+        moveHDTo(0.15f, hd_next_position);
 
     }
 
@@ -174,8 +197,10 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        moveMIDDLETo(0.1f, min_middle_motor);
-        moveHDTo(0.15f, min_hd_motor);
+        Integer mid_next_position = clamp(virtual_middle_position + MOVE_MIDDLE_BY, min_middle_motor, max_middle_motor);
+        Integer hd_next_position = clamp(virtual_hd_position - MOVE_HD_BY, min_hd_motor, max_hd_motor);
+        moveMIDDLETo(0.2f, mid_next_position);
+        moveHDTo(0.15f, hd_next_position);
 
     }
 
@@ -223,8 +248,7 @@ public class Arm {
             return;
 
         } else if (max_middle_motor == null) {
-// -1400 - hd motors
-// m
+
             if (opmode.gamepad2.dpad_up) {
                 moveMIDDLETo(MIDDLE_MOTOR_POWER, virtual_middle_position - MOVE_MIDDLE_BY);
                 freeze_middle = null;
@@ -257,7 +281,6 @@ public class Arm {
         opmode.telemetry.addLine("*CALIBRATION SCREEN*");
         line();
         opmode.telemetry.addData("status", "calibrating");
-        line();
         line();
         opmode.telemetry.addData("left hd motor position", hd_left_motor.getCurrentPosition());
         opmode.telemetry.addData("right hd motor position", hd_right_motor.getCurrentPosition());
