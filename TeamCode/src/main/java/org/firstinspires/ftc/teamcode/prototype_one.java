@@ -20,12 +20,15 @@ public class prototype_one extends OpMode {
     private Arm arm;
 
     // constants
-    private final float SCALE = 0.5f;
+    private final float SCALE = 0.8f;
     private final float MINIMUM_DISTANCE = 6;
     private final float PADDED_DISTANCE = 6;
 
     private boolean raising = false;
     private boolean raised = false;
+
+    private float time_start = 0;
+    private final float time_limit = 2;
 
     private void setPower(float left, float right) {
 
@@ -34,44 +37,32 @@ public class prototype_one extends OpMode {
         double right_power = 0;
 
         if (left < 0) {
-            left_power = left * SCALE - trigger + range_deceleration();
+            left_power = left * SCALE - trigger;
         } else if (left > 0) {
-            left_power = left * SCALE + trigger - range_deceleration();
+            left_power = left * SCALE + trigger;
         }
 
         if (right < 0) {
-            right_power = right * SCALE - trigger + range_deceleration();
+            right_power = right * SCALE - trigger;
         } else if (right > 0) {
-            right_power = right * SCALE + trigger - range_deceleration();
+            right_power = right * SCALE + trigger;
         }
 
         left_motor.setPower(left_power);
         right_motor.setPower(right_power);
     }
 
-    private void driveTank() {setPower(-gamepad1.left_stick_y, -gamepad1.right_stick_y);}
-
-    private double range_deceleration() {
-        /*
-        double distance = distance_sensor.getDistance(DistanceUnit.INCH);
-        double max = MINIMUM_DISTANCE + PADDED_DISTANCE;
-
-        if (distance > max) {
-
-            return 0;
-
-        } else if (distance < MINIMUM_DISTANCE) {
-
-            return 1;
-
-        }
-
-        return (max - distance) / PADDED_DISTANCE;
-        */
-        return 0; // TODO: temp
-    }
+    private void driveTank(float time_scale) {setPower(-gamepad1.left_stick_y * time_scale, -gamepad1.right_stick_y * time_scale);}
 
     public void line() {telemetry.addLine("\n---------------------------------------------------------------------\n");}
+
+    public float clamp(float val, float min, float max) {
+        if (min > max) {
+            float temp_max = max;
+            max = min; min = temp_max; // swap variables
+        }
+        return Math.max(min, Math.min(max, val));
+    }
 
     @Override
     public void init() {
@@ -86,8 +77,8 @@ public class prototype_one extends OpMode {
         left_motor.setDirection(DcMotorEx.Direction.FORWARD);
         right_motor.setDirection(DcMotorEx.Direction.REVERSE);
 
-        left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        left_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        right_motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         left_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         right_motor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -150,8 +141,6 @@ public class prototype_one extends OpMode {
 
         }
 
-        if (share_pressed) arm.resetEncoder();
-
         // arm
         telemetry.addData("left bumper", gamepad2.left_bumper);
         telemetry.addData("right bumper", gamepad2.right_bumper);
@@ -210,17 +199,7 @@ public class prototype_one extends OpMode {
             setPower(0, 0);
         }
 
-        arm.spinning = (gamepad2.square || gamepad2.circle);
-        if (gamepad2.circle) {
-            arm.spin(Servo.Direction.FORWARD);
-        } else if (gamepad2.square) {
-            arm.spin(Servo.Direction.REVERSE);
-        } else {
-            arm.spin(Servo.Direction.FORWARD);
-        }
-
         // drive mode
-        if (drive) driveTank();
         double tolerance = 0.05;
         boolean using_joystick = (
                 Math.abs(gamepad1.left_stick_x) > tolerance ||
@@ -229,7 +208,27 @@ public class prototype_one extends OpMode {
                         Math.abs(gamepad1.right_stick_y) > tolerance
         );
 
+        if (using_joystick && time_start == 0) {
+            time_start = (float) getRuntime();
+        } else if (!using_joystick) {
+            time_start = 0;
+        }
+
+        float difference = (float) (getRuntime() - time_start);
+        float scale = (time_start == 0) ? 1 : clamp(difference / time_limit + 1f, 0.5f, 1);
+
+        if (drive) driveTank(1);
+
         if (!drive && !arrow_key_driving && using_joystick) gamepad1.rumble(0.1, 0.1, Gamepad.RUMBLE_DURATION_CONTINUOUS);
+
+        arm.spinning = (gamepad2.square || gamepad2.circle);
+        if (gamepad2.circle) {
+            arm.spin(Servo.Direction.FORWARD);
+        } else if (gamepad2.square) {
+            arm.spin(Servo.Direction.REVERSE);
+        } else {
+            arm.spin(Servo.Direction.FORWARD);
+        }
 
         // telemetry
         line(); // just makes a line of the "-" character.

@@ -21,7 +21,7 @@ public class Arm {
     private Integer min_middle_motor = 0;
     private Integer max_middle_motor = 1576;
     private Integer min_hd_motor = 0;
-    private Integer max_hd_motor = -1234; // presets
+    private Integer max_hd_motor = -1600; // presets
     /*
     POSITIONS (IN TICKS)
     --------------------
@@ -37,7 +37,7 @@ public class Arm {
 
     // constants
     private final float SPIN_SERVO_POWER = 1;
-    private final float HD_MOTOR_POWER = 0.1f;
+    private final float HD_MOTOR_POWER = 0.2f;
     private final float MIDDLE_MOTOR_POWER = 0.1f;
     private final Integer RAISED_POSITION = 350;
 
