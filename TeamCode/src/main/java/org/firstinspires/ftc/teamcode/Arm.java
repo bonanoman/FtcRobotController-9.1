@@ -21,7 +21,7 @@ public class Arm {
     private Integer min_middle_motor = 0;
     private Integer max_middle_motor = 1576;
     private Integer min_hd_motor = 0;
-    private Integer max_hd_motor = -1600; // presets
+    private Integer max_hd_motor = -1700; // presets
     /*
     POSITIONS (IN TICKS)
     --------------------
@@ -38,7 +38,7 @@ public class Arm {
     // constants
     private final float SPIN_SERVO_POWER = 1;
     private final float HD_MOTOR_POWER = 0.2f;
-    private final float MIDDLE_MOTOR_POWER = 0.1f;
+    private final float MIDDLE_MOTOR_POWER = 0.2f;
     private final Integer RAISED_POSITION = 350;
 
     private Integer MOVE_HD_BY = 70;
@@ -97,7 +97,6 @@ public class Arm {
         } else {
             spin_servo.setPower((d == Servo.Direction.FORWARD) ? SPIN_SERVO_POWER : -SPIN_SERVO_POWER);
         }
-
     }
 
     public void moveHDTo(float power, Integer position) {
@@ -186,10 +185,10 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        Integer mid_next_position = clamp(virtual_middle_position - MOVE_MIDDLE_BY, min_middle_motor, max_middle_motor);
+        Integer mid_next_position = clamp(virtual_middle_position - MOVE_MIDDLE_BY - 100, min_middle_motor, max_middle_motor);
         Integer hd_next_position = clamp(virtual_hd_position + MOVE_HD_BY, min_hd_motor, max_hd_motor);
-        moveMIDDLETo(0.2f, mid_next_position);
-        moveHDTo(0.15f, hd_next_position);
+        moveMIDDLETo(MIDDLE_MOTOR_POWER, mid_next_position);
+        moveHDTo(HD_MOTOR_POWER, hd_next_position);
 
     }
 
@@ -197,10 +196,10 @@ public class Arm {
 
         freeze_hd = null;
         freeze_middle = null;
-        Integer mid_next_position = clamp(virtual_middle_position + MOVE_MIDDLE_BY, min_middle_motor, max_middle_motor);
+        Integer mid_next_position = clamp(virtual_middle_position + MOVE_MIDDLE_BY, min_middle_motor, max_middle_motor - 100);
         Integer hd_next_position = clamp(virtual_hd_position - MOVE_HD_BY, min_hd_motor, max_hd_motor);
-        moveMIDDLETo(0.2f, mid_next_position);
-        moveHDTo(0.15f, hd_next_position);
+        moveMIDDLETo(MIDDLE_MOTOR_POWER, mid_next_position);
+        moveHDTo(HD_MOTOR_POWER, hd_next_position);
 
     }
 
