@@ -62,5 +62,6 @@ public class drive_command extends CommandBase {
         }
 
         db.drive(l, r);
+        db.update();
     }
 }

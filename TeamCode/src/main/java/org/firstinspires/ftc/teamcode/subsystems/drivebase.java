@@ -9,10 +9,13 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+import java.util.HashMap;
+
 public class drivebase extends SubsystemBase {
     private final Motor l, r;
     private final IMU imu;
     private final DifferentialDrive d;
+    public HashMap<String, Object> t = new HashMap<String, Object>();
 
     public drivebase(final HardwareMap hm) {
         l = new Motor(hm, "m1");
@@ -45,5 +48,19 @@ public class drivebase extends SubsystemBase {
         double tilt = 10;
         l.setZeroPowerBehavior((Math.abs(p) < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT);
         r.setZeroPowerBehavior((Math.abs(p) < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT);
+    }
+
+    public void update() {
+        // telemetry
+        t.put("DRIVE LEFT MOTOR", null);
+        t.put("----------------", null);
+        t.put("LEFT POWER", l.get());
+        t.put("LEFT POSITION", l.getCurrentPosition());
+
+        t.put("RIGHT MOTOR", null);
+        t.put("-----------", null);
+        t.put("RIGHT POWER", r.get());
+        t.put("RIGHT POSITION", r.getCurrentPosition());
+
     }
 }
