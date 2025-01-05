@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.old_system_REPLACE;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="prototype one", group="brion's opmodes!")
@@ -84,6 +83,8 @@ public class prototype_one extends OpMode {
         arm.init();
         arm.spinning = false;
         arm.calibrating = false;
+
+
 
     }
 

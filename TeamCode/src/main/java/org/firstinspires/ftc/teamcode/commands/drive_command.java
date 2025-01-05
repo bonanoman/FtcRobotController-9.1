@@ -2,17 +2,17 @@ package org.firstinspires.ftc.teamcode.commands;
 
 import com.arcrobotics.ftclib.command.CommandBase;
 
-import org.firstinspires.ftc.teamcode.subsystems.drivebase;
+import org.firstinspires.ftc.teamcode.subsystems.drivetrain;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
 
 public class drive_command extends CommandBase {
-    private final drivebase db;
+    private final drivetrain db;
     private final DoubleSupplier lj, rj, rt;
     private final IntSupplier dpad;
 
-    public drive_command(drivebase db, DoubleSupplier lj, DoubleSupplier rj, DoubleSupplier rt, IntSupplier dpad) {
+    public drive_command(drivetrain db, DoubleSupplier lj, DoubleSupplier rj, DoubleSupplier rt, IntSupplier dpad) {
         this.db = db;
         this.lj = lj;
         this.rj = rj;
@@ -33,9 +33,9 @@ public class drive_command extends CommandBase {
         if (d == -1) {
             l = lj.getAsDouble() * scale;
             r = rj.getAsDouble() * scale;
-
             return;
         }
+
         switch (d) {
             case 0:
                 l = 1;

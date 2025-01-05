@@ -20,7 +20,6 @@ public class arm_command extends CommandBase {
 
     @Override
     public void execute() {
-
         int x = a1.getAsInt();
         int y = a2.getAsInt();
 
