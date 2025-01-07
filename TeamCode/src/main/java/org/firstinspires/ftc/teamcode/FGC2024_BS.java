@@ -63,12 +63,14 @@ public class FGC2024_BS extends CommandOpMode {
                 .whenReleased(new InstantCommand(() -> a.setServoState(arm.servo_state.IDLE)));
 
         gp2.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(new InstantCommand(() -> a.setServoState(arm.servo_state.FORWARD)))
+                .whenPressed(new InstantCommand(() -> a.setServoState(arm.servo_state.REVERSE)))
                 .whenReleased(new InstantCommand(() -> a.setServoState(arm.servo_state.IDLE)));
     }
 
     @Override
     public void run() {
+        // desperation:
+        //dt.drive(gp1.getLeftY(), gp1.getRightY());
         telemetry.addLine("GAMEPAD 1");
 
         telemetry.addLine("------------------------");
@@ -118,6 +120,7 @@ public class FGC2024_BS extends CommandOpMode {
         interpret(a.t);
         telemetry.addLine("------------------------");
         interpret(dt.t);
+        telemetry.addLine(dt.t.toString());
         telemetry.update();
 
         CommandScheduler.getInstance().run();

@@ -18,7 +18,7 @@ public class arm extends SubsystemBase {
     private final int max_r2 = 1576;
     private final int step = 50;
 
-    public HashMap<String, Object> t = new HashMap<String, Object>();
+    public HashMap<String, Object> t = new HashMap<>();
 
     private servo_state s_state = servo_state.IDLE;
 
@@ -54,7 +54,7 @@ public class arm extends SubsystemBase {
         r.setPositionTolerance(15);
         m.setPositionTolerance(15);
 
-        double kp = 0;
+        double kp = 0.001;
         l.setPositionCoefficient(kp);
         r.setPositionCoefficient(kp);
         m.setPositionCoefficient(kp);
@@ -85,10 +85,6 @@ public class arm extends SubsystemBase {
         this.s_state = state;
     }
 
-    public servo_state getServoState() {
-        return this.s_state;
-    }
-
     // first arm up
     public void fArmUp() {
         int goal = Range.clip(l.getCurrentPosition() + step, min_r1, max_r1);
@@ -103,16 +99,26 @@ public class arm extends SubsystemBase {
         r.setTargetPosition(goal);
     }
 
+    // first arm stop
+    public void fArmStop() {
+        int p = l.getCurrentPosition();
+        l.setTargetPosition(p);
+        r.setTargetPosition(p);
+    }
+
     // second arm up
     public void sArmUp() {
-        int goal = Range.clip(m.getCurrentPosition() + step, min_r2, max_r2);
-        m.setTargetPosition(goal);
+        m.setTargetPosition(Range.clip(m.getCurrentPosition() + step, min_r2, max_r2));
     }
 
     // second arm down
     public void sArmDown() {
-        int goal = Range.clip(m.getCurrentPosition() - step, min_r2, max_r2);
-        m.setTargetPosition(goal);
+        m.setTargetPosition(Range.clip(m.getCurrentPosition() - step, min_r2, max_r2));
+    }
+
+    // second arm stop
+    public void sArmStop() {
+        m.setTargetPosition(m.getCurrentPosition());
     }
 
     public void update() {
@@ -130,6 +136,5 @@ public class arm extends SubsystemBase {
         t.put("SERVO", null);
         t.put("STATE", this.s_state);
         t.put("POWER", s.get());
-
     }
 }

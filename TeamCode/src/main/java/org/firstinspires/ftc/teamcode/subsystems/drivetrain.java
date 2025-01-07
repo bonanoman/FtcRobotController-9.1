@@ -34,7 +34,7 @@ public class drivetrain extends SubsystemBase {
 
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
-                RevHubOrientationOnRobot.UsbFacingDirection.DOWN
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
         )));
 
         imu.resetYaw();
@@ -42,6 +42,7 @@ public class drivetrain extends SubsystemBase {
 
     public void drive(double lj, double rj) {
         d.tankDrive(lj, rj);
+        t.put("DRIVINGINGINSDGID", null);
 
         double p = imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES);
         // how far does the robot need to tilt to recognize it's on an incline.
@@ -49,6 +50,7 @@ public class drivetrain extends SubsystemBase {
         Motor.ZeroPowerBehavior behavior = (Math.abs(p) < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT;
         l.setZeroPowerBehavior(behavior);
         r.setZeroPowerBehavior(behavior);
+        update();
     }
 
     public void update() {
