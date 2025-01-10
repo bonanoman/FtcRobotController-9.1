@@ -12,20 +12,11 @@ public class arm extends SubsystemBase {
     private final Motor l, r, m;
     private final CRServo s;
 
-    private enum E1 {
-        MINIMUM(150),
-        MAXIMUM(1700);
-
-        final int position;
-
-        E1(int position) {this.position = position;}
-    }
     private final int MIN_E1 = 150;
     private final int MAX_E1 = 1700;
     private final int MIN_E2 = 0;
     private final int MAX_E2 = 1576;
     private final int STEP = 50;
-    private final double GLOBAL_MOTOR_POWER = 0.3;
 
     private final HashMap<String, Object> T = new HashMap<>();
 
@@ -130,10 +121,12 @@ public class arm extends SubsystemBase {
 
     @Override
     public void periodic() {
-        l.set(l.atTargetPosition() ? 0 : 0.3);
-        r.set(r.atTargetPosition() ? 0 : 0.3);
+        double GLOBAL_MOTOR_POWER = 0.3;
+
+        l.set(l.atTargetPosition() ? 0 : GLOBAL_MOTOR_POWER);
+        r.set(r.atTargetPosition() ? 0 : GLOBAL_MOTOR_POWER);
+        m.set(m.atTargetPosition() ? 0 : GLOBAL_MOTOR_POWER);
         s.set(s_state.POWER);
-        m.set(m.atTargetPosition() ? 0 : 0.3);
     }
 
     public HashMap<String, Object> getTelemetryPacket() {
