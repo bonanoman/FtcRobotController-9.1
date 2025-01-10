@@ -20,25 +20,25 @@ public class arm_command extends CommandBase {
 
     @Override
     public void execute() {
-        a.update();
-
         int x = a1.getAsInt();
         int y = a2.getAsInt();
 
-        if (x > 1) {
-            a.fArmUp();
-        } else if (x < 1) {
-            a.fArmDown();
-        } else {
-            a.fArmStop();
+        switch (x) {
+            case 1: a.fArmUp();
+                break;
+            case -1: a.fArmDown();
+                break;
+            default: a.fArmStop();
+                break;
         }
 
-        if (y > 1) {
-            a.sArmUp();
-        } else if (y < 1) {
-            a.sArmDown();
-        } else {
-            a.sArmStop();
+        switch (y) {
+            case 1: a.sArmUp();
+                break;
+            case -1: a.sArmDown();
+                break;
+            default: a.sArmStop();
+                break;
         }
     }
 }

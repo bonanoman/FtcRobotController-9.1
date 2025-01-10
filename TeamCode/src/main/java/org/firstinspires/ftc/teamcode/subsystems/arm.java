@@ -12,13 +12,22 @@ public class arm extends SubsystemBase {
     private final Motor l, r, m;
     private final CRServo s;
 
-    private final int min_r1 = 350;
-    private final int max_r1 = 1700;
-    private final int min_r2 = 0;
-    private final int max_r2 = 1576;
-    private final int step = 50;
+    private enum E1 {
+        MINIMUM(150),
+        MAXIMUM(1700);
 
-    public HashMap<String, Object> t = new HashMap<>();
+        final int position;
+
+        E1(int position) {this.position = position;}
+    }
+    private final int MIN_E1 = 150;
+    private final int MAX_E1 = 1700;
+    private final int MIN_E2 = 0;
+    private final int MAX_E2 = 1576;
+    private final int STEP = 50;
+    private final double GLOBAL_MOTOR_POWER = 0.3;
+
+    private final HashMap<String, Object> T = new HashMap<>();
 
     private servo_state s_state = servo_state.IDLE;
 
@@ -54,7 +63,7 @@ public class arm extends SubsystemBase {
         r.setPositionTolerance(15);
         m.setPositionTolerance(15);
 
-        double kp = 0.001;
+        double kp = 0.05;
         l.setPositionCoefficient(kp);
         r.setPositionCoefficient(kp);
         m.setPositionCoefficient(kp);
@@ -66,19 +75,17 @@ public class arm extends SubsystemBase {
         l.setInverted(false);
         r.setInverted(true);
         m.setInverted(false);
+        s.setInverted(false);
 
         resetEncoders();
 
-        l.setTargetPosition(min_r1);
-        r.setTargetPosition(min_r1);
-        m.setTargetPosition(min_r2);
+        l.setTargetPosition(MIN_E1);
+        r.setTargetPosition(MIN_E1);
+        m.setTargetPosition(MIN_E2);
 
-        double mp = 0.3;
-        l.set(mp);
-        r.set(mp);
-        m.set(mp);
-
-        s.setInverted(false);
+        l.set(0);
+        r.set(0);
+        m.set(0);
     }
 
     public void setServoState(servo_state state) {
@@ -87,14 +94,14 @@ public class arm extends SubsystemBase {
 
     // first arm up
     public void fArmUp() {
-        int goal = Range.clip(l.getCurrentPosition() + step, min_r1, max_r1);
+        int goal = Range.clip(l.getCurrentPosition() + STEP, MIN_E1, MAX_E1);
         l.setTargetPosition(goal);
         r.setTargetPosition(goal);
     }
 
     // first arm down
     public void fArmDown() {
-        int goal = Range.clip(l.getCurrentPosition() - step, min_r1, max_r1);
+        int goal = Range.clip(l.getCurrentPosition() - STEP, MIN_E1, MAX_E1);
         l.setTargetPosition(goal);
         r.setTargetPosition(goal);
     }
@@ -108,12 +115,12 @@ public class arm extends SubsystemBase {
 
     // second arm up
     public void sArmUp() {
-        m.setTargetPosition(Range.clip(m.getCurrentPosition() + step, min_r2, max_r2));
+        m.setTargetPosition(Range.clip(m.getCurrentPosition() + STEP, MIN_E2, MAX_E2));
     }
 
     // second arm down
     public void sArmDown() {
-        m.setTargetPosition(Range.clip(m.getCurrentPosition() - step, min_r2, max_r2));
+        m.setTargetPosition(Range.clip(m.getCurrentPosition() - STEP, MIN_E2, MAX_E2));
     }
 
     // second arm stop
@@ -121,20 +128,25 @@ public class arm extends SubsystemBase {
         m.setTargetPosition(m.getCurrentPosition());
     }
 
-    public void update() {
-        s.set(s_state.POWER); // servo moves based on state
+    @Override
+    public void periodic() {
+        l.set(l.atTargetPosition() ? 0 : 0.3);
+        r.set(r.atTargetPosition() ? 0 : 0.3);
+        s.set(s_state.POWER);
+        m.set(m.atTargetPosition() ? 0 : 0.3);
+    }
 
-        //telemetry
-        t.put("ARM ONE LEFT MOTOR", null);
-        t.put("LEFT POWER", l.get());
-        t.put("LEFT POSITION", l.getCurrentPosition());
-
-        t.put("ARM ONE RIGHT MOTOR", null);
-        t.put("RIGHT POWER", r.get());
-        t.put("RIGHT POSITION", r.get());
-
-        t.put("SERVO", null);
-        t.put("STATE", this.s_state);
-        t.put("POWER", s.get());
+    public HashMap<String, Object> getTelemetryPacket() {
+        T.put("ARM", null);
+        T.put("-------------------", null);
+        T.put("LEFT POWER", l.get());
+        T.put("LEFT POSITION", l.getCurrentPosition());
+        T.put("------------------- ", null);
+        T.put("RIGHT POWER", r.get());
+        T.put("RIGHT POSITION", r.get());
+        T.put("-------------------  ", null);
+        T.put("SERVO STATE", this.s_state);
+        T.put("SERVO POWER", s.get());
+        return T;
     }
 }

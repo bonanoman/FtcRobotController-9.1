@@ -15,7 +15,7 @@ public class drivetrain extends SubsystemBase {
     private final Motor l, r;
     private final IMU imu;
     private final DifferentialDrive d;
-    public HashMap<String, Object> t = new HashMap<>();
+    public HashMap<String, Object> T = new HashMap<>();
 
     public drivetrain(final HardwareMap hm) {
         l = new Motor(hm, "m1");
@@ -31,6 +31,7 @@ public class drivetrain extends SubsystemBase {
         r.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
 
         l.setRunMode(Motor.RunMode.RawPower);
+        r.setRunMode(Motor.RunMode.RawPower);
 
         imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.FORWARD,
@@ -42,7 +43,6 @@ public class drivetrain extends SubsystemBase {
 
     public void drive(double lj, double rj) {
         d.tankDrive(lj, rj);
-        t.put("DRIVINGINGINSDGID", null);
 
         double p = imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES);
         // how far does the robot need to tilt to recognize it's on an incline.
@@ -50,26 +50,19 @@ public class drivetrain extends SubsystemBase {
         Motor.ZeroPowerBehavior behavior = (Math.abs(p) < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT;
         l.setZeroPowerBehavior(behavior);
         r.setZeroPowerBehavior(behavior);
-        update();
+        getTelemetryPacket();
     }
 
-    public void update() {
-        // telemetry
-        t.put("DRIVETRAIN", null);
-        t.put("----------------", null);
-        t.put("", null);
-        t.put("LEFT MOTOR", null);
-
-        t.put("----------- ", null);
-        t.put(" ", null);
-        t.put("LEFT POWER", l.get());
-        t.put("LEFT POSITION", l.getCurrentPosition());
-
-        t.put("RIGHT MOTOR", null);
-
-        t.put("-----------", null);
-        t.put("  ", null);
-        t.put("RIGHT POWER", r.get());
-        t.put("RIGHT POSITION", r.getCurrentPosition());
+    public HashMap<String, Object> getTelemetryPacket() {
+        T.put("DRIVETRAIN", null);
+        T.put("---------------", null);
+        T.put("LEFT POWER", l.get());
+        T.put("LEFT POSITION", l.getCurrentPosition());
+        T.put("--------------- ", null);
+        T.put("RIGHT POWER", r.get());
+        T.put("RIGHT POSITION", r.getCurrentPosition());
+        T.put("---------------  ", null);
+        T.put("PITCH", imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES));
+        return T;
     }
 }

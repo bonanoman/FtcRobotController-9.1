@@ -1,18 +1,19 @@
 package org.firstinspires.ftc.teamcode.commands;
 
 import com.arcrobotics.ftclib.command.CommandBase;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys.Button;
 
 import org.firstinspires.ftc.teamcode.subsystems.drivetrain;
 
 import java.util.function.DoubleSupplier;
-import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 
 public class drive_command extends CommandBase {
     private final drivetrain dt;
     private final DoubleSupplier lj, rj, rt;
-    private final IntSupplier dpad;
+    private final Supplier<Button> dpad;
 
-    public drive_command(drivetrain dt, DoubleSupplier lj, DoubleSupplier rj, DoubleSupplier rt, IntSupplier dpad) {
+    public drive_command(drivetrain dt, DoubleSupplier lj, DoubleSupplier rj, DoubleSupplier rt, Supplier<Button> dpad) {
         this.dt = dt;
         this.lj = lj;
         this.rj = rj;
@@ -24,35 +25,78 @@ public class drive_command extends CommandBase {
 
     @Override
     public void execute() {
-        dt.update();
-
         double l, r;
         double scale = 0.6;
         double t = rt.getAsDouble();
-        int d = dpad.getAsInt();
+        Button d = dpad.get();
 
-        if (d == -1) {
-            l = lj.getAsDouble();
-            r = rj.getAsDouble();
-        } else if (d==0) {
-            l=1; r=1;
-        } else if (d==180) {
-            l=-1; r=-1;
-        } else if (d==90) {
-            l=-1; r=1;
-        } else if (d==270) {
-            l=1; r=-1;
-        } else {
-            dt.update();
-            return;
+        switch(d) {
+            case DPAD_UP: l = r = 1;
+                break;
+            case DPAD_DOWN: l = r = -1;
+                break;
+            case DPAD_LEFT: l = -1; r = 1;
+                break;
+            case DPAD_RIGHT: l = 1; r = -1;
+                break;
+            default: l = lj.getAsDouble(); r = rj.getAsDouble();
+                break;
         }
 
-        l *= scale;
-        r *= scale;
+        if (Math.abs(l) > 0 || Math.abs(r) > 0) {
+            // normalize values (scale them so they are between 0 and 1)
+            double m = Math.max(l, r);
+            l /= m;
+            r /= m;
 
-        l = l + (1 - l) * t;
-        r = r + (1 - r) * t;
+            // scale values (we don't want to go full throttle constantly)
+            l *= scale;
+            r *= scale;
+
+            // use the trigger to approach 1 (full throttle)
+            l = l + (1 - l) * t;
+            r = r + (1 - r) * t;
+        }
 
         dt.drive(l, r);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
