@@ -15,6 +15,7 @@ public class drivetrain extends SubsystemBase {
     private final Motor l, r;
     private final IMU imu;
     private final DifferentialDrive d;
+    private final double pitch;
     public HashMap<String, Object> T = new HashMap<>();
 
     public drivetrain(final HardwareMap hm) {
@@ -39,18 +40,18 @@ public class drivetrain extends SubsystemBase {
         )));
 
         imu.resetYaw();
+        pitch = imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES);
     }
 
     public void drive(double lj, double rj) {
         d.tankDrive(lj, rj);
 
-        double p = imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES);
+        double p = Math.abs(pitch - imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.DEGREES));
         // how far does the robot need to tilt to recognize it's on an incline.
         double tilt = 10;
-        Motor.ZeroPowerBehavior behavior = (Math.abs(p) < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT;
+        Motor.ZeroPowerBehavior behavior = (p < tilt) ? Motor.ZeroPowerBehavior.BRAKE : Motor.ZeroPowerBehavior.FLOAT;
         l.setZeroPowerBehavior(behavior);
         r.setZeroPowerBehavior(behavior);
-        getTelemetryPacket();
     }
 
     public HashMap<String, Object> getTelemetryPacket() {
