@@ -50,9 +50,10 @@ public class arm extends SubsystemBase {
         r.setRunMode(Motor.RunMode.PositionControl);
         m.setRunMode(Motor.RunMode.PositionControl);
 
-        l.setPositionTolerance(15);
-        r.setPositionTolerance(15);
-        m.setPositionTolerance(15);
+        double tolerance = 15;
+        l.setPositionTolerance(tolerance);
+        r.setPositionTolerance(tolerance);
+        m.setPositionTolerance(tolerance);
 
         double kp = 0.05;
         l.setPositionCoefficient(kp);
