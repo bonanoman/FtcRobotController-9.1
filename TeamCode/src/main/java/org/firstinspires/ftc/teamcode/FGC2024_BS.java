@@ -36,6 +36,7 @@ public class FGC2024_BS extends CommandOpMode {
         SlewRateLimiter limit1 = new SlewRateLimiter(4);
         SlewRateLimiter limit2 = new SlewRateLimiter(4);
 
+        /* // TODO: uncomment
         dt.setDefaultCommand(new drive_command(
                 dt,
                 () -> limit1.calculate(gp1.getLeftY()),
@@ -43,6 +44,7 @@ public class FGC2024_BS extends CommandOpMode {
                 () -> gp1.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER),
                 () -> getDPAD(gp1)
         ));
+        */
 
         a.setDefaultCommand(new arm_command(
                 a,
@@ -73,6 +75,7 @@ public class FGC2024_BS extends CommandOpMode {
     @Override
     public void run() {
         CommandScheduler.getInstance().run();
+        dt.arcadeDrive(gp1.getLeftY(), gp1.getRightX()); // TODO: comment out
 
         telemetry.addLine("<------------------------>");
         telemetry.addLine("GAMEPAD 1");
@@ -110,8 +113,9 @@ public class FGC2024_BS extends CommandOpMode {
         telemetry.addLine("HARDWARE");
         telemetry.addLine("<------------------------>");
         interpretTelemetryPacket(a.getTelemetryPacket());
-        telemetry.addLine("<------------------------>");
+        telemetry.addLine("------------------------");
         interpretTelemetryPacket(dt.getTelemetryPacket());
+        telemetry.addLine("<------------------------>");
     }
 
     public Button getDPAD(GamepadEx gp) {

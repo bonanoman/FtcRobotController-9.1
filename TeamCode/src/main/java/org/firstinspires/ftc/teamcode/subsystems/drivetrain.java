@@ -54,6 +54,10 @@ public class drivetrain extends SubsystemBase {
         r.setZeroPowerBehavior(behavior);
     }
 
+    public void arcadeDrive(double ljy, double rjx) {
+        d.arcadeDrive(ljy * 0.6, rjx * 0.8);
+    }
+
     public HashMap<String, Object> getTelemetryPacket() {
         T.put("DRIVETRAIN", null);
         T.put("---------------", null);
